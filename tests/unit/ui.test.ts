@@ -52,6 +52,35 @@ class MockElement {
     }
   }
 
+  get classList() {
+    return {
+      add: (...classes: string[]) => {
+        const current = this.className ? this.className.split(/\s+/).filter(Boolean) : [];
+        for (const cls of classes) {
+          if (!current.includes(cls)) current.push(cls);
+        }
+        this.className = current.join(' ');
+      },
+      remove: (...classes: string[]) => {
+        const current = this.className ? this.className.split(/\s+/).filter(Boolean) : [];
+        this.className = current.filter((c) => !classes.includes(c)).join(' ');
+      },
+      contains: (cls: string) => {
+        const current = this.className ? this.className.split(/\s+/).filter(Boolean) : [];
+        return current.includes(cls);
+      },
+      toggle: (cls: string) => {
+        const current = this.className ? this.className.split(/\s+/).filter(Boolean) : [];
+        if (current.includes(cls)) {
+          this.className = current.filter((c) => c !== cls).join(' ');
+        } else {
+          current.push(cls);
+          this.className = current.join(' ');
+        }
+      },
+    };
+  }
+
   setAttribute(k: string, v: string): void {
     this.attributes.set(k, v);
     if (k === 'id') this.id = v;
@@ -62,6 +91,12 @@ class MockElement {
     if (k === 'id') return this.id;
     if (k === 'class') return this.className;
     return this.attributes.get(k) ?? null;
+  }
+
+  removeAttribute(k: string): void {
+    this.attributes.delete(k);
+    if (k === 'id') this.id = '';
+    if (k === 'class') this.className = '';
   }
 
   appendChild(child: MockElement): MockElement {
@@ -475,6 +510,54 @@ describe('Step 16: UI Components & Affordances', () => {
       // Exactly fraud-detection is bottleneck
       const bottleneckIds = Array.from(postBottlenecks).map((el: any) => el.getAttribute('id'));
       expect(bottleneckIds).toEqual(['node-fraud-detection']);
+
+      canvas.destroy();
+    });
+
+    it('updates HUD cycles badge on scan completion and clears busy state to Cycles: 3', () => {
+      const svg = new MockElement('SVG') as unknown as SVGSVGElement;
+      let state = createInitialState();
+      const seed = createSeedGraph();
+      state.graph_nodes = seed.nodes;
+      state.graph_edges = seed.edges;
+
+      // Mock DOM badge elements
+      const badgeCycles = new MockElement('DIV');
+      badgeCycles.id = 'badge-cycles';
+      const cyclesLabel = new MockElement('SPAN');
+      cyclesLabel.id = 'hud-cycles-label';
+      cyclesLabel.textContent = 'Cycles: Scan ▶';
+      badgeCycles.appendChild(cyclesLabel);
+
+      (globalThis as any).document.getElementById = (id: string) => {
+        if (id === 'badge-cycles') return badgeCycles;
+        if (id === 'hud-cycles-label') return cyclesLabel;
+        return null;
+      };
+
+      const canvas = new GraphCanvas({
+        svgElement: svg,
+        getState: () => state,
+        setState: (s) => {
+          state = s;
+        },
+      });
+
+      // 1. Simulate in-flight scan
+      canvas.setHUDBadgeBusy('badge-cycles', 'Scanning…');
+      expect(badgeCycles.getAttribute('aria-disabled')).toBe('true');
+      expect(cyclesLabel.textContent).toBe('Scanning…');
+
+      // 2. Mark edges as cyclic
+      state.graph_edges.e_order_payment.is_cyclic = true;
+      state.graph_edges.e_payment_notif.is_cyclic = true;
+      state.graph_edges.e_notif_order.is_cyclic = true;
+
+      // 3. Clear busy state on completion
+      canvas.clearHUDBadgeBusy('badge-cycles');
+      expect(badgeCycles.getAttribute('aria-disabled')).toBeNull();
+      expect(cyclesLabel.textContent).toBe('Cycles: 3');
+      expect(badgeCycles.classList.contains('danger')).toBe(true);
 
       canvas.destroy();
     });

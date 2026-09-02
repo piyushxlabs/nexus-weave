@@ -349,15 +349,18 @@ export class GraphCanvas {
 
     if (cyclesLabel && badgeCycles && badgeCycles.getAttribute('aria-disabled') !== 'true') {
       if (cyclicCount > 0) {
-        cyclesLabel.textContent = `Cycles: ${cyclicCount} Loop${cyclicCount > 1 ? 's' : ''}`;
+        cyclesLabel.textContent = `Cycles: ${cyclicCount}`;
         badgeCycles.classList.add('danger');
         badgeCycles.classList.remove('safe');
-      } else if (edges.some((e) => e.is_cyclic !== undefined)) {
+      } else if (edges.some((e) => e.is_cyclic !== null && e.is_cyclic !== undefined)) {
         // Scan was run and found no cycles
         cyclesLabel.textContent = 'Cycles: None';
+        badgeCycles.classList.remove('danger');
+        badgeCycles.classList.add('safe');
       } else {
         // Never scanned
         cyclesLabel.textContent = 'Cycles: Scan ▶';
+        badgeCycles.classList.remove('danger', 'safe');
       }
     }
 
@@ -403,6 +406,7 @@ export class GraphCanvas {
   public clearHUDBadgeBusy(badgeId: string): void {
     const badge = document.getElementById(badgeId);
     if (badge) badge.removeAttribute('aria-disabled');
+    this.updateHUD();
   }
 
   /**
