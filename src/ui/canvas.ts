@@ -207,17 +207,20 @@ export class GraphCanvas {
 
       if (edge.is_cyclic) {
         // Red dashed warning stroke
+        line.setAttribute('class', 'cyclic-edge');
         line.setAttribute('stroke', '#ef4444');
         line.setAttribute('stroke-width', '2.5');
         line.setAttribute('stroke-dasharray', '6,4');
         line.setAttribute('marker-end', 'url(#arrow-cyclic)');
       } else if (edge.is_critical) {
         // Cyan glowing critical path stroke
+        line.setAttribute('class', 'critical-edge');
         line.setAttribute('stroke', '#06b6d4');
         line.setAttribute('stroke-width', '3.5');
         line.setAttribute('marker-end', 'url(#arrow-critical)');
       } else {
         // Standard edge
+        line.setAttribute('class', 'standard-edge');
         line.setAttribute('stroke', '#475569');
         line.setAttribute('stroke-width', '1.8');
         line.setAttribute('marker-end', 'url(#arrow-standard)');

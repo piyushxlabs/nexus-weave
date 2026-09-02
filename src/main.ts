@@ -15,9 +15,10 @@ import { renderUnsupportedBanner } from './ui/unsupportedBanner.js';
 import { setupProposalBannerListener } from './ui/proposalBanner.js';
 
 export interface NexusWeaveApp {
-  state: GraphAgentState;
+  state: () => GraphAgentState;
   canvas: GraphCanvas;
   activityPanel: ActivityPanel;
+  dispatch: (toolName: string, args?: Record<string, unknown>) => Promise<any>;
   unmount: () => void;
 }
 
@@ -103,12 +104,19 @@ export function bootstrapNexusWeave(): NexusWeaveApp | null {
     if (unbindWebMCP) unbindWebMCP();
   };
 
-  return {
-    state,
+  const app: NexusWeaveApp = {
+    state: stateAccessor.getState,
     canvas,
     activityPanel,
+    dispatch: (toolName: string, args: Record<string, unknown> = {}) => dispatchToolCall(toolName, args, stateAccessor),
     unmount,
   };
+
+  if (typeof window !== 'undefined') {
+    (window as any).__nexusWeave = app;
+  }
+
+  return app;
 }
 
 // Auto-bootstrap in browser environment
