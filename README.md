@@ -80,77 +80,53 @@ Nexus Weave is a **browser-resident, zero-backend WebMCP tool server**. There is
 
 ```mermaid
 flowchart TD
-    INBOUND(["🌐 External AI Agent / Chrome Browser\nWebMCP executeTool(name, args)"]) --> DISPATCH
+    AI(["🤖 External AI Agent\nChatGPT / Chrome WebMCP"]) -->|"document.modelContext.getTools()\ngetModelContext() dual-detection"| REG
 
-    subgraph ENGINE [" ⚙️ Deterministic 6-Step Dispatch Engine (src/tools/dispatch.ts) "]
-        DISPATCH["**src/tools/dispatch.ts**\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nStep 1: Ajv inputSchema Pre-Validation\nStep 2: Trust & Scope Check (Pinned Node Intersect)\nStep 3: Branching & HITL Gate Evaluation\nStep 4: Deterministic Algorithm Execution\nStep 5: Pure Reducer Atomic Commit\nStep 6: In-Page EventBus Telemetry Emission"]
-    end
+    REG["⚙️ src/webmcp/register.ts\n─────────────────────────\nregisterTool() × 5\nAbortController lifecycle\nTyped inputSchema validation"]
 
-    %% Step 1 & 2: Error Guardrails
-    DISPATCH -- "Schema Invalid" --> ERR_SCHEMA["**SchemaValidationError**\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nLog to error_logs via appendOnly\nEmit tool-invocation-error event\nZero state mutation"]
-    DISPATCH -- "Pinned Target Collision" --> ERR_PIN["**PinnedConflictError**\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nImmediate execution abort\nLog to error_logs\nZero state mutation"]
+    REG --> DISP
 
-    %% Step 3: Validated Dispatch Router
-    DISPATCH -- "Validated & Target Safe" --> ROUTER{"\u{1F500} Tool Execution Router"}
+    DISP["🔀 src/tools/dispatch.ts\n─────────────────────────\nStep 1 — Ajv Schema Validation\nStep 2 — Trust & Scope Check\nStep 3 — Branch Decision\nStep 4 — Algorithm Execution\nStep 5 — Reducer Commit\nStep 6 — Return & Event Emit"]
 
-    %% Read-Only Direct Tools
-    ROUTER -- "get_graph_topology" --> T1["**get_graph_topology**\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nSnapshot Serializer\nOpaque labels (untrustedContentHint)\nReturns 16 nodes, 23 edges"]
-    ROUTER -- "detect_cycles_and_bottlenecks" --> T2["**detect_cycles_and_bottlenecks**\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nTarjan SCC directed cycle engine\nNormalized degree centrality\nAnnotates is_cyclic edges"]
-    ROUTER -- "compute_critical_path" --> T3["**compute_critical_path**\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nTopological Sort + DP Longest-Path\nSilence-Over-Guessing on cycles\nAnnotates is_critical edges"]
+    DISP -->|"Schema Invalid"| ERR["❌ SchemaValidationError\nlog → error_logs\nemit tool-invocation-error"]
+    DISP -->|"Pinned Intersection"| PIN_ERR["🔒 PinnedConflictError\nImmediate abort\nZero state mutation"]
+    DISP -->|"Blast radius > 30% OR full-graph"| GATE["⏸️ Approval Gate\npending_proposal → status: proposed\nemit approval-required\nHalt — await confirm_pending: true"]
+    DISP -->|"Safe & Scoped"| EXEC
 
-    %% Direct Pin Tool
-    ROUTER -- "pin_and_group_region" --> T5["**pin_and_group_region**\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nBitmask State Locking\nAll-or-nothing ID verification\nUpdates pinned_node_ids"]
+    %% Routing confirm_pending to EXEC places Algorithm Branch cleanly below the Approval Gate
+    GATE -->|"confirm_pending: true"| EXEC
+    EXEC{Algorithm Branch}
 
-    %% Mutation Tool with HITL Gate
-    ROUTER -- "minimize_edge_crossings" --> GATE_CHECK{"Target Scope Check"}
+    EXEC -->|"get_graph_topology"| T1["📊 Snapshot Serializer\nRead-only — no mutation\nReturns 16 nodes, 23 edges"]
+    EXEC -->|"detect_cycles_and_bottlenecks"| T2["🔄 Tarjan SCC\nDFS back-edge detection\nDegree centrality scoring\nAnnotates is_cyclic edges"]
+    EXEC -->|"compute_critical_path"| T3["📏 DAG Longest-Path\nTopological sort + DP\nSilence-over-guessing policy\nAnnotates is_critical edges"]
+    EXEC -->|"minimize_edge_crossings"| T4["📐 Barycenter Relaxation\n2D segment intersection\nCompute-then-atomic-apply\nUpdates graph_nodes.position"]
+    EXEC -->|"pin_and_group_region"| T5["📌 Set Membership Lock\nAll-or-nothing validation\nUpdates pinned_node_ids\nIdempotent atomic write"]
 
-    GATE_CHECK -- "Blast Radius > 30pct OR Full-Graph" --> APPROVAL["**\u23F8\uFE0F HITL Approval Gate**\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nWrites pending_proposal (last-write-wins)\nEmits approval-required event\nDisplays Ghost-Node coordinate overlay\nHalt: Await confirm_pending: true"]
+    T1 & T2 & T3 & T4 & T5 --> RED["🗂️ src/state/reducers.ts\n─────────────────────────\nmergeByKey / appendOnly / lastWriteWins\nPure functions — zero direct mutation"]
 
-    APPROVAL -- "User Confirms: Approve and Apply" --> T4
-    GATE_CHECK -- "Safe and Scoped under 30pct" --> T4["**minimize_edge_crossings**\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n2D Segment Line Intersections\nBounded Barycenter Relaxation\nUntangles crossings (9 to 0)"]
+    RED --> BUS["📡 src/ui/activityBus.ts\nCustomEvent / EventTarget\nIn-process only — zero network\ntool-invocation-complete event"]
 
-    %% Step 5: Pure Reducers
-    T1 --> REDUCERS
-    T2 --> REDUCERS
-    T3 --> REDUCERS
-    T4 --> REDUCERS
-    T5 --> REDUCERS
+    BUS --> SVG["🎨 Reactive SVG Canvas\n─────────────────────────\n450ms cubic-bezier node glide\n300ms edge stroke transition\nGhost overlay previews\nLED neon node indicators\n60 FPS — no layout jitter"]
 
-    subgraph STATE [" \u{1F5C4}\uFE0F In-Memory Ephemeral State (src/state/reducers.ts) "]
-        REDUCERS["**src/state/reducers.ts**\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\nmergeByKey: graph_nodes, graph_edges, tool_artifacts\nappendOnly: invocation_log, error_logs\nlastWriteWins: pinned_node_ids, pending_proposal\n100% In-Memory - Zero Persistence - Zero Data Egress"]
-    end
+    BUS --> TEL["🔬 src/telemetry/activityLog.ts\nIn-memory OTel GenAI spans\ngen_ai.* attribute naming\nRing-buffer — zero export"]
 
-    %% Step 6: In-Page EventBus
-    REDUCERS --> BUS
-
-    subgraph PRESENTATION [" \u{1F5A5}\uFE0F In-Page Observability and Reactive Canvas "]
-        BUS["**src/ui/activityBus.ts**\nNative DOM EventTarget / CustomEvent Bus\nZero Network Egress (0 KB Exfiltration)"]
-
-        BUS --> SVG["**Reactive SVG Canvas (src/ui/canvas.ts)**\n450ms Eased Spring Transitions\nRed Dashed Cyclic Edges\nCyan Critical Path Glow\nGhost Overlay and Pin Badges"]
-        BUS --> HUD["**Live HUD and Badges**\nCycles Counter - Pinned Count\nUntangle Proposal Review Banner"]
-        BUS --> DOCK["**Activity and Telemetry Dock**\nOpenTelemetry GenAI Spans\nExecution latency and audit logs"]
-    end
-
-    %% Styling
-    style ENGINE fill:#0a0f1d,stroke:#38bdf8,stroke-width:2px,color:#f8fafc
-    style DISPATCH fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#e2e8f0
-    style ERR_SCHEMA fill:#450a0a,stroke:#ef4444,stroke-width:2px,color:#fca5a5
-    style ERR_PIN fill:#451a03,stroke:#f59e0b,stroke-width:2px,color:#fcd34d
-    style ROUTER fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff
-    style GATE_CHECK fill:#1e1b4b,stroke:#818cf8,stroke-width:1px,color:#e0e7ff
-    style APPROVAL fill:#451a03,stroke:#f97316,stroke-width:2px,color:#ffedd5
-    style T1 fill:#042f2e,stroke:#14b8a6,stroke-width:1px,color:#ccfbf1
-    style T2 fill:#042f2e,stroke:#14b8a6,stroke-width:1px,color:#ccfbf1
-    style T3 fill:#042f2e,stroke:#14b8a6,stroke-width:1px,color:#ccfbf1
-    style T4 fill:#172554,stroke:#3b82f6,stroke-width:1px,color:#dbeafe
-    style T5 fill:#172554,stroke:#3b82f6,stroke-width:1px,color:#dbeafe
-    style STATE fill:#0a0f1d,stroke:#6366f1,stroke-width:2px,color:#f8fafc
-    style REDUCERS fill:#0f172a,stroke:#6366f1,stroke-width:2px,color:#e2e8f0
-    style PRESENTATION fill:#0a0f1d,stroke:#10b981,stroke-width:2px,color:#f8fafc
-    style BUS fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#d1fae5
-    style SVG fill:#0f172a,stroke:#10b981,stroke-width:1px,color:#e2e8f0
-    style HUD fill:#0f172a,stroke:#10b981,stroke-width:1px,color:#e2e8f0
-    style DOCK fill:#0f172a,stroke:#10b981,stroke-width:1px,color:#e2e8f0
+    style AI fill:#1e1b4b,stroke:#818cf8,stroke-width:2px,color:#e0e7ff
+    style REG fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#e2e8f0
+    style DISP fill:#0f172a,stroke:#a78bfa,stroke-width:2px,color:#e2e8f0
+    style GATE fill:#431407,stroke:#f97316,stroke-width:3px,color:#fed7aa
+    style ERR fill:#4c0519,stroke:#e11d48,stroke-width:2px,color:#fecdd3
+    style PIN_ERR fill:#4c0519,stroke:#e11d48,stroke-width:2px,color:#fecdd3
+    style EXEC fill:#0f172a,stroke:#fbbf24,stroke-width:2px,color:#e2e8f0
+    style T1 fill:#0f172a,stroke:#10b981,stroke-width:1px,color:#d1fae5
+    style T2 fill:#0f172a,stroke:#10b981,stroke-width:1px,color:#d1fae5
+    style T3 fill:#0f172a,stroke:#10b981,stroke-width:1px,color:#d1fae5
+    style T4 fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#fef3c7
+    style T5 fill:#0f172a,stroke:#f59e0b,stroke-width:2px,color:#fef3c7
+    style RED fill:#0f172a,stroke:#6366f1,stroke-width:2px,color:#e0e7ff
+    style BUS fill:#0f172a,stroke:#06b6d4,stroke-width:2px,color:#cffafe
+    style SVG fill:#052e16,stroke:#059669,stroke-width:2px,color:#d1fae5
+    style TEL fill:#0f172a,stroke:#8b5cf6,stroke-width:2px,color:#ede9fe
 ```
 
 ---
