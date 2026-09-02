@@ -395,6 +395,7 @@ export class GraphCanvas {
 
   private handleDragStart(e: MouseEvent, nodeId: string, node: NodeRecord): void {
     if (e.button !== 0) return;
+    e.preventDefault();
     this.draggingNodeId = nodeId;
     const pt = this.getSVGCoordinates(e);
     this.dragOffset = {
@@ -414,11 +415,25 @@ export class GraphCanvas {
       [this.draggingNodeId]: { x: newX, y: newY },
     });
     this.setState(nextState);
+
+    // Fast-path visual coordinate update during drag
+    const nodeEl = this.svg.getElementById(`node-${this.draggingNodeId}`);
+    if (nodeEl) {
+      nodeEl.setAttribute('transform', `translate(${newX}, ${newY})`);
+    }
   }
 
   private handleDragEnd(): void {
     if (!this.draggingNodeId) return;
+    const finishedId = this.draggingNodeId;
     this.draggingNodeId = null;
+    this.render();
+    activityBus.emit('state-update', {
+      field: 'graph_nodes',
+      reducer: 'merge-by-key',
+      changed_ids: [finishedId],
+      timestamp: Date.now(),
+    });
   }
 
   private getSVGCoordinates(e: MouseEvent): { x: number; y: number } {

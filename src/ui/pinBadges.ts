@@ -56,6 +56,7 @@ export function createPinBadgeElement(options: PinBadgeOptions): SVGGElement {
     onToggle(nodeId, !isPinned);
   };
 
+  g.addEventListener('mousedown', (e) => e.stopPropagation());
   g.addEventListener('click', handleToggle);
   g.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {

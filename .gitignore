@@ -5,6 +5,8 @@ node_modules/
 # Production Build output
 dist/
 build/
+test-results/
+playwright-report/
 
 # AI Agent internal rules, prompts & scratchpad logs (Do NOT upload to GitHub)
 .agents/
