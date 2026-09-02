@@ -11,6 +11,7 @@ import { activityBus } from '../ui/activityBus.js';
 import {
   NexusWeaveError,
   MissingDurationFieldError,
+  CycleDetectedInDAGError,
 } from './dispatch.js';
 import {
   COMPUTE_CRITICAL_PATH_NAME,
@@ -99,7 +100,7 @@ export async function handleComputeCriticalPath(
   }
 
   if (topoOrder.length < durationBearingNodes.length) {
-    throw new NexusWeaveError(
+    throw new CycleDetectedInDAGError(
       `Graph contains circular dependencies in the evaluated subgraph; critical path cannot be computed on cyclic graphs. Run 'detect_cycles_and_bottlenecks' to identify cycles.`
     );
   }

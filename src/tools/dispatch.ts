@@ -72,6 +72,20 @@ export class MissingDurationFieldError extends NexusWeaveError {
   }
 }
 
+export class CycleDetectedInDAGError extends NexusWeaveError {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CycleDetectedInDAGError';
+  }
+}
+
+export class ImmutableConfigError extends NexusWeaveError {
+  constructor(message: string = 'Runtime configuration is strictly immutable after initialization.') {
+    super(message);
+    this.name = 'ImmutableConfigError';
+  }
+}
+
 export class ConcurrencyLockError extends NexusWeaveError {
   constructor(message: string = 'A mutating operation is already in flight. Concurrency limit is 1.') {
     super(message);
