@@ -15,6 +15,7 @@ export interface BottleneckNode {
 }
 
 export interface DetectCyclesAndBottlenecksResult {
+  [key: string]: unknown;
   cyclic_edge_ids: string[];
   bottleneck_nodes: BottleneckNode[];
 }
