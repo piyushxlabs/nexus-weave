@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nexus Weave — WebMCP Dependency Graph Untangler</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background-color: #0f172a;
+        color: #f8fafc;
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+      }
+      #banner-root {
+        position: relative;
+        z-index: 50;
+      }
+      #canvas-container {
+        flex: 1;
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      #graph-canvas {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      #activity-panel-root {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        z-index: 40;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="banner-root"></div>
+    <main id="canvas-container">
+      <svg id="graph-canvas"></svg>
+    </main>
+    <aside id="activity-panel-root"></aside>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
