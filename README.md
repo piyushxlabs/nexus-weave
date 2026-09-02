@@ -167,22 +167,68 @@ All 5 tools are registered exclusively via `document.modelContext.registerTool` 
 | `minimize_edge_crossings` | Mutation | `readOnlyHint: false` | Bounded Barycenter Relaxation + 2D Segment Intersection | `graph_nodes.position` (HITL Gated) |
 | `pin_and_group_region` | Mutation | `readOnlyHint: false`, `idempotentHint: true` | Set Membership & Bitmask State Locking | `pinned_node_ids` (Atomic All-or-Nothing) |
 
-### WebMCP Tool Registration & Input Schema (src/webmcp/register.ts)
+### WebMCP Tool Registration & Execution Engine (src/webmcp/register.ts)
 
 ```typescript
-// src/webmcp/register.ts — literal tool registration definition
-{
-  name: MINIMIZE_EDGE_CROSSINGS_NAME,
-  description: minimizeEdgeCrossingsMetadata.description,
-  strict: true,
-  annotations: minimizeEdgeCrossingsMetadata.annotations,
-  inputSchema: minimizeEdgeCrossingsMetadata.inputSchema as Record<string, unknown>,
-  execute: async (args, context) => {
-    return dispatchToolCall(MINIMIZE_EDGE_CROSSINGS_NAME, args, stateAccessor, {
-      signal: context?.signal ?? defaultSignal,
-      toolCallId: context?.toolCallId,
-    });
-  },
+// src/webmcp/register.ts — Authentic Context Acquisition & Native Tool Registration
+import { dispatchToolCall, type DispatchStateAccessor } from '../tools/dispatch.js';
+import {
+  MINIMIZE_EDGE_CROSSINGS_NAME,
+  minimizeEdgeCrossingsMetadata,
+} from '../tools/schemas/minimizeEdgeCrossings.schema.js';
+
+/**
+ * Registers all 5 WebMCP tools against the active ModelContext.
+ */
+export function registerAllTools(
+  stateAccessor: DispatchStateAccessor,
+  options?: RegisterToolOptions
+): RegisterAllToolsResult {
+  // 1. Acquire active ModelContext via universal dual-detection helper
+  const context = getModelContext();
+  if (!context) {
+    throw new Error('WebMCP is not supported in this runtime environment (getModelContext() is null).');
+  }
+
+  // 2. Instantiate tool definitions wired to async dispatch
+  const tools = createToolDefinitions(stateAccessor, options?.signal);
+
+  // 3. Register each tool via native WebMCP Imperative API: document.modelContext.registerTool()
+  for (const tool of tools) {
+    context.registerTool(tool, options);
+  }
+
+  return {
+    registeredCount: tools.length,
+    toolNames: tools.map((t) => t.name),
+    tools,
+  };
+}
+
+/**
+ * Creates definitions for all 5 WebMCP tools wired to dispatchToolCall.
+ */
+export function createToolDefinitions(
+  stateAccessor: DispatchStateAccessor,
+  defaultSignal?: AbortSignal
+): WebMCPToolDefinition[] {
+  return [
+    // ...
+    {
+      name: MINIMIZE_EDGE_CROSSINGS_NAME,
+      description: minimizeEdgeCrossingsMetadata.description,
+      strict: true,
+      annotations: minimizeEdgeCrossingsMetadata.annotations,
+      inputSchema: minimizeEdgeCrossingsMetadata.inputSchema as Record<string, unknown>,
+      execute: async (args, context) => {
+        return dispatchToolCall(MINIMIZE_EDGE_CROSSINGS_NAME, args, stateAccessor, {
+          signal: context?.signal ?? defaultSignal,
+          toolCallId: context?.toolCallId,
+        });
+      },
+    },
+    // ...
+  ];
 }
 ```
 
