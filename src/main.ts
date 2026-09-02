@@ -218,9 +218,11 @@ export function bootstrapNexusWeave(): NexusWeaveApp | null {
         stateAccessor
       );
       canvas.clearProposal();
+      canvas.clearHUDBadgeBusy('badge-layout');
     },
     onDiscard: () => {
       canvas.clearProposal();
+      canvas.clearHUDBadgeBusy('badge-layout');
     },
   });
 

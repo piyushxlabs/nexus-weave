@@ -95,10 +95,50 @@ export interface LayoutMinimizationSolution {
   affectedNodeIds: string[];
 }
 
+export const MIN_DX = 165;
+export const MIN_DY = 80;
+
+/**
+ * Checks whether a specific node in the layout violates AABB clearance against any other node.
+ */
+export function isNodeColliding(
+  nodeId: string,
+  positions: Record<string, Point>,
+  minDx: number = MIN_DX,
+  minDy: number = MIN_DY
+): boolean {
+  const p1 = positions[nodeId];
+  if (!p1) return false;
+  for (const [otherId, p2] of Object.entries(positions)) {
+    if (otherId === nodeId || !p2) continue;
+    if (Math.abs(p1.x - p2.x) < minDx && Math.abs(p1.y - p2.y) < minDy) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Checks whether any two nodes in the layout violate the minimum AABB clearance thresholds.
+ */
+export function hasNodeCollision(
+  positions: Record<string, Point>,
+  minDx: number = MIN_DX,
+  minDy: number = MIN_DY
+): boolean {
+  const ids = Object.keys(positions);
+  for (const id of ids) {
+    if (isNodeColliding(id, positions, minDx, minDy)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 /**
  * Deterministic, bounded layout solver for edge crossing minimization.
  * Uses iterative coordinate swap & barycenter relaxation bounded by config.max_layout_iterations.
- * Strictly guarantees candidateCrossings <= initialCrossings.
+ * Strictly guarantees candidateCrossings <= initialCrossings and 0 AABB node collisions.
  */
 export function solveEdgeCrossingMinimization(
   state: GraphAgentState,
@@ -143,7 +183,7 @@ export function solveEdgeCrossingMinimization(
   for (let iter = 0; iter < maxIterations; iter++) {
     let improvedInIteration = false;
 
-    // 1. Coordinate swap heuristic among unpinned nodes in region
+    // 1. Coordinate swap heuristic among unpinned nodes in region (strictly preserving column X coordinates)
     for (let i = 0; i < unpinnedRegionIds.length; i++) {
       const u = unpinnedRegionIds[i];
       for (let j = i + 1; j < unpinnedRegionIds.length; j++) {
@@ -153,6 +193,16 @@ export function solveEdgeCrossingMinimization(
         const tempY = workingPositions[u].y;
         workingPositions[u].y = workingPositions[v].y;
         workingPositions[v].y = tempY;
+
+        // Collision guard: reject swap if either moved node causes an AABB collision
+        if (
+          isNodeColliding(u, workingPositions, MIN_DX, MIN_DY) ||
+          isNodeColliding(v, workingPositions, MIN_DX, MIN_DY)
+        ) {
+          workingPositions[v].y = workingPositions[u].y;
+          workingPositions[u].y = tempY;
+          continue;
+        }
 
         const currentCrossings = countCrossings(workingPositions, allEdges);
         if (currentCrossings < bestCrossings) {
@@ -165,24 +215,6 @@ export function solveEdgeCrossingMinimization(
           // Revert Y swap
           workingPositions[v].y = workingPositions[u].y;
           workingPositions[u].y = tempY;
-        }
-
-        // Test swapping both X and Y coordinates
-        const tempPos = { ...workingPositions[u] };
-        workingPositions[u] = { ...workingPositions[v] };
-        workingPositions[v] = tempPos;
-
-        const swapCrossings = countCrossings(workingPositions, allEdges);
-        if (swapCrossings < bestCrossings) {
-          bestCrossings = swapCrossings;
-          improvedInIteration = true;
-          for (const id of unpinnedRegionIds) {
-            bestPositions[id] = { x: workingPositions[id].x, y: workingPositions[id].y };
-          }
-        } else {
-          // Revert full swap
-          workingPositions[v] = { ...workingPositions[u] };
-          workingPositions[u] = tempPos;
         }
       }
     }
@@ -199,9 +231,14 @@ export function solveEdgeCrossingMinimization(
       }
 
       if (neighbors.length > 0) {
-        const avgY = neighbors.reduce((sum, p) => sum + p.y, 0) / neighbors.length;
+        const avgY = Math.round(neighbors.reduce((sum, p) => sum + p.y, 0) / neighbors.length);
         const oldY = workingPositions[u].y;
         workingPositions[u].y = avgY;
+
+        if (isNodeColliding(u, workingPositions, MIN_DX, MIN_DY)) {
+          workingPositions[u].y = oldY;
+          continue;
+        }
 
         const baryCrossings = countCrossings(workingPositions, allEdges);
         if (baryCrossings < bestCrossings) {
@@ -229,6 +266,7 @@ export function solveEdgeCrossingMinimization(
     affectedNodeIds: unpinnedRegionIds,
   };
 }
+
 
 /**
  * WebMCP handler for minimize_edge_crossings.

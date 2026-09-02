@@ -292,6 +292,7 @@ export class GraphCanvas {
   public clearProposal(): void {
     this.activeProposal = null;
     this.ghostGroup.innerHTML = '';
+    this.updateHUD();
   }
 
   public render(): void {
@@ -563,8 +564,11 @@ export class GraphCanvas {
         cardBorder.setAttribute('stroke', 'url(#grad-pinned-border)');
         cardBorder.setAttribute('stroke-width', '1.5');
       } else if (nodeStatus === 'cyclic') {
-        cardBorder.setAttribute('stroke', 'rgba(244,63,94,0.35)');
-        cardBorder.setAttribute('stroke-width', '1.5');
+        cardBorder.setAttribute('stroke', '#EF4444');
+        cardBorder.setAttribute('stroke-width', '2');
+      } else if (nodeStatus === 'bottleneck') {
+        cardBorder.setAttribute('stroke', '#F59E0B');
+        cardBorder.setAttribute('stroke-width', '2');
       } else {
         cardBorder.setAttribute('stroke', 'rgba(255,255,255,0.08)');
         cardBorder.setAttribute('stroke-width', '1');
