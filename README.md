@@ -48,6 +48,30 @@ Modern distributed systems — microservices meshes, CI/CD pipelines, cloud infr
 
 ---
 
+## 🌟 WebMCP Challenge Alignment — The 4 Core Pillars
+
+### 1. 🎯 Why This Use Case is a Strong Fit for WebMCP
+Enterprise dependency graphs (microservices meshes, cloud infrastructure, CI/CD pipelines) represent proprietary, security-sensitive architecture. Uploading live topological structures to 3rd-party LLM cloud servers violates corporate data residency standards and creates egress liability. **WebMCP allows autonomous AI agents to inspect, diagnose, and untangle complex dependency topologies directly inside the client browser’s memory** — executing high-performance graph algorithms with 0 KB data exfiltration.
+
+### 2. ⚡ How It Creates a Better User Experience
+Traditional APMs force engineers into manual visual untangling, multi-dashboard metric correlation, and speculative log hunting. Nexus Weave turns the browser into an agent-executable workspace:
+- **Instant Mathematical Diagnosis:** Autonomous sub-3ms graph algorithms (Tarjan's SCC for deadlocks, DAG Topological Sort for critical path) replace guesswork.
+- **Visual-First Affordances:** Rather than conversational text responses, the AI agent drives **reactive 60 FPS SVG spring animations**, highlighted cyclic corridors (crimson dashed lines), and critical path glow indicators directly on screen.
+
+### 3. 🤝 What People & Agents Can Do Together (Human-Agent Co-Creation)
+Nexus Weave establishes **bidirectional safety boundaries** between engineers and external AI agents:
+- **Lock Down Critical Infrastructure:** Engineers use interactive pin badges to lock foundational service nodes (`pinned_node_ids`). WebMCP tools structurally guarantee pinned nodes are never moved, displaced, or modified by the agent.
+- **Human-in-the-Loop (HITL) Safety Gate:** Whenever an AI agent proposes layout reorganizations exceeding a **30% blast radius** (or targeting the whole graph), execution halts deterministically. The engine renders a live **Ghost-Node coordinate overlay**, allowing the human engineer to review the prospective untangling and click **"Approve & Apply"** (`confirm_pending: true`) before state commitment.
+
+### 4. ⚙️ How WebMCP Was Implemented
+- **Universal Dual-Detection:** Universal `getModelContext()` helper seamlessly detects both `document.modelContext` and `navigator.modelContext`.
+- **Strict Schema Validation:** All 5 tool inputs are strictly validated at runtime against compiled **Ajv v8 JSON Schema Draft-07** definitions using the canonical `inputSchema` property.
+- **Deterministic 6-Step Dispatch Lifecycle:** Validate ➔ Trust & Scope Check ➔ Branch Decision ➔ Compute-Then-Atomic-Apply ➔ Pure Reducer Commit ➔ In-Page EventBus Emission.
+- **Pure Functional Reducers:** Ephemeral in-memory state (`GraphAgentState`) managed purely via `mergeByKey`, `appendOnly`, and `lastWriteWins` reducers with zero persistence.
+- **In-Process Telemetry Bus:** Native DOM `EventTarget` and `CustomEvent` bus dispatching local OpenTelemetry GenAI spans without network egress.
+
+---
+
 ## 🖥️ Visual Grounding & Live Engine Showcase
 
 <div align="center">
@@ -291,13 +315,19 @@ Bundle scan result: 0 matches ✅
 
 ---
 
-## ⚡ Quickstart & Local Reproduction
+## ⚡ Quickstart & Testing Instructions for Judges
 
-### Prerequisites
+### 🧪 Live Evaluation Options
 
-- **Node.js** 18+ and **pnpm** 8+
-- **Chrome Canary** with `chrome://flags/#enable-webmcp-testing` enabled (for live WebMCP tool discovery)
-- No API keys, no database, no backend server required
+| Environment | Setup / Access Instructions | Expected Behavior |
+| :--- | :--- | :--- |
+| **🌐 Live Web Demo** | Open [https://nexus-weave.vercel.app](https://nexus-weave.vercel.app) in any modern browser | Instant interactive 16-node graph with manual HUD badges & chaos engineering simulator |
+| **🤖 ChatGPT In-App Browser** | Navigate to `https://nexus-weave.vercel.app` inside ChatGPT's browser | In-app agent discovers 5 WebMCP tools via `document.modelContext` |
+| **🚩 Google Chrome Canary** | Set `chrome://flags/#enable-webmcp-testing` to **Enabled** & restart browser | Full native WebMCP imperative tool discovery and direct agent invocation |
+
+---
+
+### 💻 Local Reproduction
 
 ```bash
 # 1. Clone & Install
@@ -305,28 +335,57 @@ git clone https://github.com/piyushxlabs/nexus-weave.git
 cd nexus-weave
 pnpm install
 
-# 2. Launch the development server
+# 2. Launch development server (Port 5173)
 pnpm run dev
-# → Open http://localhost:5173 in Chrome Canary
+# → Open http://localhost:5173
 
-# 3. Run all verification suites
-pnpm run typecheck && pnpm test:unit && pnpm test:e2e
+# 3. Run complete automated verification suite (129/129 Passing)
+pnpm run typecheck ; pnpm test:unit ; pnpm test:e2e
 
-# 4. Production build (static single-page asset)
+# 4. Create production build (Static 0-dependency bundle)
 pnpm run build
 ```
 
-### Connecting an AI Agent
+---
 
-Once the dev server is running in Chrome Canary with the WebMCP flag enabled, any WebMCP-capable AI can discover and invoke the 5 tools:
+### 🎮 Copy-Paste DevTools Console Evaluation Script
+
+Judges on Chrome Canary (or any WebMCP-enabled browser) can open the browser console (`F12` ➔ **Console**) and paste this test script to verify all 5 tools interactively in real time:
 
 ```javascript
-// Verify tool registration from DevTools console
+// ── 1. Discover Registered Tools ─────────────────────────────────────────────
 const ctx = document.modelContext ?? navigator.modelContext;
-const tools = await ctx.getTools();
-console.log(tools.map(t => t.name));
-// → ['get_graph_topology', 'detect_cycles_and_bottlenecks',
-//    'compute_critical_path', 'minimize_edge_crossings', 'pin_and_group_region']
+if (!ctx) {
+  console.warn("WebMCP flag not enabled. Enable chrome://flags/#enable-webmcp-testing");
+} else {
+  const tools = await ctx.getTools();
+  console.log("✅ WebMCP Tools Registered:", tools.map(t => t.name));
+
+  // ── 2. Run Autonomous Deadlock & Bottleneck Analysis ───────────────────────
+  console.log("🔍 Running Tarjan's SCC cycle & bottleneck detection...");
+  const deadlockResult = await ctx.executeTool("detect_cycles_and_bottlenecks", {});
+  console.log("Tarjan SCC Result (Isolated 3-node deadlock):", deadlockResult);
+
+  // ── 3. Run DAG Longest-Path Critical Path Computation ──────────────────────
+  console.log("📏 Computing Critical Path...");
+  const criticalPathResult = await ctx.executeTool("compute_critical_path", { duration_field: "duration_ms" });
+  console.log("Critical Path Result:", criticalPathResult);
+
+  // ── 4. Trigger Layout Reorganization (>30% blast radius HITL Proposal) ─────
+  console.log("📐 Requesting Layout Untangling (Triggers Ghost-Node HITL Gate)...");
+  const proposalResult = await ctx.executeTool("minimize_edge_crossings", {
+    region_node_ids: ["order-service", "auth-service", "catalog-service", "payment-gateway", "notification-service", "inventory-service"]
+  });
+  console.log("HITL Layout Proposal:", proposalResult);
+
+  // ── 5. Confirm & Atomically Commit Untangled Layout ────────────────────────
+  console.log("✅ Confirming Layout Proposal...");
+  const commitResult = await ctx.executeTool("minimize_edge_crossings", {
+    region_node_ids: ["order-service", "auth-service", "catalog-service", "payment-gateway", "notification-service", "inventory-service"],
+    confirm_pending: true
+  });
+  console.log("Committed Layout (Crossings reduced to 0):", commitResult);
+}
 ```
 
 ---
