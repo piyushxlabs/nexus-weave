@@ -338,7 +338,7 @@ describe('Step 16: UI Components & Affordances', () => {
         },
       });
 
-      expect(svg.getAttribute('viewBox')).toContain('-22 -89');
+      expect(svg.getAttribute('viewBox')).toContain('-22 -104');
       // Children should include defs, edges-layer, ghost-layer, nodes-layer, status-pill-layer
       expect(svg.children.length).toBeGreaterThanOrEqual(5);
 
@@ -363,9 +363,9 @@ describe('Step 16: UI Components & Affordances', () => {
       // Initial auto-centered viewport state (scale: 1.15x)
       const initialViewport = canvas.getViewport();
       expect(initialViewport.viewX).toBe(-22);
-      expect(initialViewport.viewY).toBe(-89);
+      expect(initialViewport.viewY).toBe(-104);
       expect(initialViewport.scale).toBe(1.15);
-      expect(svg.getAttribute('viewBox')).toContain('-22 -89');
+      expect(svg.getAttribute('viewBox')).toContain('-22 -104');
 
       // Test wheel zoom in (negative deltaY)
       const mockWheelEventIn = {
@@ -399,9 +399,9 @@ describe('Step 16: UI Components & Affordances', () => {
       canvas.resetViewport();
       const resetViewport = canvas.getViewport();
       expect(resetViewport.viewX).toBe(-22);
-      expect(resetViewport.viewY).toBe(-89);
+      expect(resetViewport.viewY).toBe(-104);
       expect(resetViewport.scale).toBe(1.15);
-      expect(svg.getAttribute('viewBox')).toContain('-22 -89');
+      expect(svg.getAttribute('viewBox')).toContain('-22 -104');
 
       canvas.destroy();
     });
