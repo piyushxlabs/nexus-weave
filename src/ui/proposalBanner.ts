@@ -194,9 +194,9 @@ export function setupProposalBannerListener(
       region_node_ids: detail.region_node_ids,
       candidate_positions: (detail.preview?.candidate_positions as Record<string, { x: number; y: number }>) || {},
       candidate_crossings:
-        ((detail.preview?.candidate_crossings ?? detail.preview?.crossings_after) as number) ?? 0,
+        ((detail.preview?.candidate_crossings ?? detail.preview?.crossings_after ?? (detail as any).candidate_crossings ?? (detail as any).crossings_after) as number) ?? 0,
       initial_crossings:
-        ((detail.preview?.initial_crossings ?? detail.preview?.crossings_before) as number) ?? 0,
+        ((detail.preview?.initial_crossings ?? detail.preview?.crossings_before ?? (detail as any).initial_crossings ?? (detail as any).crossings_before) as number) ?? 0,
       status: 'proposed',
     };
 

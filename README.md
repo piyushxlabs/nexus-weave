@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="./assets/banner.png" alt="Nexus Weave — Zero-Egress Client-Side WebMCP Dependency Graph Engine" width="100%" style="border-radius: 12px;" />
 
@@ -13,7 +13,7 @@
 [![Zero Egress](https://img.shields.io/badge/Zero_Egress-100%25_In--Browser_(0KB_Network)-06B6D4?style=for-the-badge&logo=shield&logoColor=white)](https://github.com/piyushxlabs/nexus-weave)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9%2B_(Strict_Mode)-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-6.0%2B-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tests](https://img.shields.io/badge/Tests-129%2F129_Passing_(100%25)-10B981?style=for-the-badge&logo=vitest&logoColor=white)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-131%2F131_Passing_(100%25)-10B981?style=for-the-badge&logo=vitest&logoColor=white)](./tests/)
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](./LICENSE)
 [![Security](https://img.shields.io/badge/Security-OWASP_Agentic_Top_10_Compliant-EF4444?style=for-the-badge&logo=owasp&logoColor=white)](https://github.com/piyushxlabs/nexus-weave)
 
@@ -41,7 +41,7 @@ Modern distributed systems — microservices meshes, CI/CD pipelines, cloud infr
 | :--- | :--- | :--- |
 | **Data Privacy & Egress** | Uploads proprietary architecture & telemetry to 3rd-party servers | **100% Zero-Egress** — Graph never leaves local browser memory |
 | **Deadlock Diagnosis** | Manual log scanning, heuristic guesswork across distributed dashboards | **Deterministic Tarjan's SCC** — Discovers cycles in `< 3ms` |
-| **Layout Untangling** | Messy edge crossings, manual drag-and-drop layout fixing | **Planar Crossing Minimizer** — Algorithmic reduction (9 → 0 crossings) |
+| **Layout Untangling** | Messy edge crossings, manual drag-and-drop layout fixing | **Planar Crossing Minimizer** — Algorithmic reduction (2 → 0 crossings) |
 | **AI Agent Safety** | Unrestricted AI tool calls can corrupt live service layouts | **Human-in-the-Loop (HITL)** — Blast-radius gate + Ghost Node previews |
 | **Human-Agent Co-Creation** | Isolated manual editing or pure autonomous hallucination | **Bidirectional Pin & Re-Route** — Human locks infra, Agent respects constraints |
 | **Chaos Resilience** | Heavy external chaos engineering agents requiring cloud agents | **Zero-Dependency Chaos Cascade** — Ephemeral UI failure simulations |
@@ -284,7 +284,7 @@ Every structural insight produced by Nexus Weave is computed **mathematically in
 
 - **Tarjan's SCC** (`detect_cycles_and_bottlenecks`): DFS back-edge detection with O(V+E) complexity. Finds the seeded 3-node deadlock ring (Order Service ➔ Payment Gateway ➔ Notification Service) in `< 3ms`.
 - **DAG Longest-Path** (`compute_critical_path`): Topological sort + dynamic programming. Enforces the **Silence-Over-Guessing Policy** — returns `success: false` if the graph contains cycles or the `duration_field` is absent or prototype-polluting.
-- **Barycenter Relaxation** (`minimize_edge_crossings`): Bounded iteration (`iterations ≤ config.max_layout_iterations`) of the Sugiyama-framework barycenter heuristic with 2D line-segment intersection counting. Reduces initial crossing count from 9 → 0 on the seed graph.
+- **Barycenter Relaxation** (`minimize_edge_crossings`): Bounded iteration (`iterations ≤ config.max_layout_iterations`) of the Sugiyama-framework barycenter heuristic with 2D line-segment intersection counting. Reduces initial crossing count from 2 → 0 on the seed graph.
 
 ### 3. 🛡️ Enterprise Human-in-the-Loop (HITL) Safety Gate
 
@@ -306,10 +306,10 @@ The built-in Chaos Engineering cascade simulator demonstrates live downstream fa
 
 ---
 
-## 🔬 Automated Verification & Test Suite — 129 / 129 Passing
+## 🔬 Automated Verification & Test Suite — 131 / 131 Passing
 
 ```bash
-pnpm test:unit    # 122 Vitest unit tests across 15 suites
+pnpm test:unit    # 124 Vitest unit tests across 15 suites
 pnpm test:e2e     # 7 Playwright WebMCP browser E2E tests
 ```
 
@@ -326,13 +326,13 @@ pnpm test:e2e     # 7 Playwright WebMCP browser E2E tests
 | **Pin Region Tool** | `pinAndGroupRegion.test.ts` | Atomic all-or-nothing pin state mutations | ✅ Pass (5/5) |
 | **WebMCP Registration Engine** | `register.test.ts` | `AbortController` teardown & tool exposure | ✅ Pass (8/8) |
 | **In-Page Activity Bus** | `activityBus.test.ts` | Native `EventTarget` typed domain event dispatch | ✅ Pass (7/7) |
-| **UI Components & Affordances** | `ui.test.ts` | Viewport centering, pin badges, proposal review banner | ✅ Pass (10/10) |
+| **UI Components & Affordances** | `ui.test.ts` | Viewport centering, pin badges, proposal review banner | ✅ Pass (12/12) |
 | **In-Memory Telemetry** | `telemetry.test.ts` | OpenTelemetry GenAI span attributes & ring-buffer | ✅ Pass (6/6) |
 | **Prohibitions & Guardrails** | `guardrails.test.ts` | Prototype pollution defense, zero network egress grep | ✅ Pass (10/10) |
 | **Production Readiness** | `productionReadiness.test.ts` | MIT license check, bundle sanitization, zero network calls | ✅ Pass (5/5) |
 | **Browser E2E Suite** | `webmcp.spec.ts` | Canvas mounting, direct drag, panning, zoom, badges | ✅ Pass (5/5) |
 | **E2E 6-Stage Lifecycle** | `verificationFlow.spec.ts` | Full autonomous loop: Scan ➔ Untangle ➔ Pin ➔ Block | ✅ Pass (2/2) |
-| **TOTAL** | | **17 Test Suites (Unit + E2E)** | **129 / 129 ✅** |
+| **TOTAL** | | **17 Test Suites (Unit + E2E)** | **131 / 131 ✅** |
 
 E2E tests are launched with Chrome flags `--enable-features=WebMCPTesting,DevToolsWebMCPSupport` via `@playwright/test` as configured in `playwright.config.ts`.
 
@@ -385,7 +385,7 @@ pnpm install
 pnpm run dev
 # → Open http://localhost:5173
 
-# 3. Run complete automated verification suite (129/129 Passing)
+# 3. Run complete automated verification suite (131/131 Passing)
 pnpm run typecheck ; pnpm test:unit ; pnpm test:e2e
 
 # 4. Create production build (Static 0-dependency bundle)
@@ -414,20 +414,20 @@ if (!ctx) {
 
   // ── 3. Run DAG Longest-Path Critical Path Computation ──────────────────────
   console.log("📏 Computing Critical Path...");
-  const criticalPathResult = await ctx.executeTool("compute_critical_path", { duration_field: "duration_ms" });
+  const criticalPathResult = await ctx.executeTool("compute_critical_path", { duration_field: "duration" });
   console.log("Critical Path Result:", criticalPathResult);
 
   // ── 4. Trigger Layout Reorganization (>30% blast radius HITL Proposal) ─────
   console.log("📐 Requesting Layout Untangling (Triggers Ghost-Node HITL Gate)...");
   const proposalResult = await ctx.executeTool("minimize_edge_crossings", {
-    region_node_ids: ["order-service", "auth-service", "catalog-service", "payment-gateway", "notification-service", "inventory-service"]
+    region_node_ids: ["order-service", "auth-service", "catalog-service", "payment-service", "notification-service", "inventory-service"]
   });
   console.log("HITL Layout Proposal:", proposalResult);
 
   // ── 5. Confirm & Atomically Commit Untangled Layout ────────────────────────
   console.log("✅ Confirming Layout Proposal...");
   const commitResult = await ctx.executeTool("minimize_edge_crossings", {
-    region_node_ids: ["order-service", "auth-service", "catalog-service", "payment-gateway", "notification-service", "inventory-service"],
+    region_node_ids: ["order-service", "auth-service", "catalog-service", "payment-service", "notification-service", "inventory-service"],
     confirm_pending: true
   });
   console.log("Committed Layout (Crossings reduced to 0):", commitResult);
@@ -487,7 +487,7 @@ nexus-weave/
 │       └── register.ts                      # ONLY file that calls getModelContext().registerTool()
 │
 ├── tests/
-│   ├── unit/                                # 15 Vitest unit test suites (122 tests)
+│   ├── unit/                                # 15 Vitest unit test suites (124 tests)
 │   └── e2e/                                 # 2 Playwright WebMCP E2E suites (7 tests)
 │
 ├── index.html                               # Single-page app shell
@@ -515,10 +515,10 @@ The application pre-loads a realistic microservices dependency graph on tab load
 | Total Nodes | **16** |
 | Total Edges | **23** |
 | Seeded Deadlock Rings | **1** (3-node cyclic SCC) |
-| Initial Edge Crossings | **9** |
+| Initial Edge Crossings | **2** |
 | Post-Minimization Crossings | **0** |
 | Pinned Node Support | ✅ All-or-nothing atomic |
-| Automated Tests | **129 / 129** (122 Unit + 7 E2E) |
+| Automated Tests | **131 / 131** (124 Unit + 7 E2E) |
 | TypeScript Errors | **0** |
 | Network Calls | **0** |
 

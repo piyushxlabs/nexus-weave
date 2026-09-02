@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Nexus Weave — Pitch Deck Presentation</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #07090e;
+            color: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .slide-viewport {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            background: radial-gradient(circle at 50% 30%, #0f172a 0%, #07090e 80%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px;
+            text-align: center;
+        }
+
+        .slide-viewport.active {
+            display: flex;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 20px;
+            border-radius: 9999px;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.4);
+            color: #818cf8;
+        }
+
+        h1 {
+            font-size: 80px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            font-size: 32px;
+            color: #94a3b8;
+            max-width: 1200px;
+            line-height: 1.4;
+            margin-bottom: 48px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            width: 100%;
+            max-width: 1400px;
+            text-align: left;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 40px;
+            backdrop-filter: blur(12px);
+        }
+
+        .card.danger {
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(69, 10, 10, 0.2);
+        }
+
+        .card.success {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(6, 78, 59, 0.2);
+        }
+
+        .card h3 {
+            font-size: 30px;
+            margin-bottom: 16px;
+        }
+
+        .card ul {
+            list-style: none;
+            font-size: 22px;
+            color: #cbd5e1;
+            line-height: 1.8;
+        }
+
+        .card ul li::before {
+            content: "• ";
+            color: #818cf8;
+            font-weight: bold;
+        }
+
+        .metric-row {
+            display: flex;
+            gap: 32px;
+            margin-top: 40px;
+        }
+
+        .metric-box {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 16px;
+            padding: 24px 40px;
+            text-align: center;
+        }
+
+        .metric-val {
+            font-size: 48px;
+            font-weight: 800;
+            color: #38bdf8;
+        }
+
+        .metric-lbl {
+            font-size: 18px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .key-nav {
+            position: absolute;
+            bottom: 24px;
+            right: 32px;
+            font-size: 16px;
+            color: #64748b;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Slide 1: Hero Cover -->
+    <div class="slide-viewport active" id="slide-1">
+        <div class="badge">🌐 OpenAI & Chrome WebMCP Challenge 2026</div>
+        <h1>Nexus Weave</h1>
+        <p class="subtitle">Zero-Egress, Client-Side WebMCP Observability & Dependency Graph Engine</p>
+        <div class="metric-row">
+            <div class="metric-box">
+                <div class="metric-val">100%</div>
+                <div class="metric-lbl">In-Browser Egress Free</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-val">&lt; 3ms</div>
+                <div class="metric-lbl">Tarjan Deadlock Engine</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-val">HITL</div>
+                <div class="metric-lbl">Ghost-Node Safety Gate</div>
+            </div>
+        </div>
+        <div class="key-nav">Use Arrow Keys [← / →] to Navigate</div>
+    </div>
+
+    <!-- Slide 2: The Enterprise Dilemma -->
+    <div class="slide-viewport" id="slide-2">
+        <div class="badge" style="border-color: #ef4444; color: #f87171;">The Enterprise Problem</div>
+        <h1>Entangled Topologies & Data Leakage</h1>
+        <p class="subtitle">Modern microservices topologies cannot be safely solved by remote cloud LLMs.</p>
+        <div class="grid-2">
+            <div class="card danger">
+                <h3 style="color: #f87171;">❌ Traditional Cloud Visualizers</h3>
+                <ul>
+                    <li>Uploads proprietary architecture to remote 3rd-party servers</li>
+                    <li>Manual visual correlation across hundreds of dashboard logs</li>
+                    <li>Unchecked AI agents mutate live layouts without review gates</li>
+                </ul>
+            </div>
+            <div class="card success">
+                <h3 style="color: #34d399;">✅ Nexus Weave Autonomous Engine</h3>
+                <ul>
+                    <li><strong>Zero Network Egress:</strong> 100% computation inside browser tab memory</li>
+                    <li><strong>Deterministic Algorithms:</strong> Sub-3ms Tarjan's SCC cycle isolation</li>
+                    <li><strong>Human-in-the-Loop:</strong> Mandatory Ghost-Node approval on large changes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: WebMCP Architecture -->
+    <div class="slide-viewport" id="slide-3">
+        <div class="badge">Architecture Foundation</div>
+        <h1>Native WebMCP 6-Step Dispatch</h1>
+        <p class="subtitle">Universal Dual-Detection (document.modelContext & navigator.modelContext)</p>
+        <div class="grid-2">
+            <div class="card">
+                <h3 style="color: #38bdf8;">⚙️ Deterministic Tool Engine</h3>
+                <ul>
+                    <li><strong>get_graph_topology:</strong> Read-only snapshot serializer</li>
+                    <li><strong>detect_cycles_and_bottlenecks:</strong> Tarjan SCC engine</li>
+                    <li><strong>compute_critical_path:</strong> DAG Longest-Path (DP)</li>
+                    <li><strong>minimize_edge_crossings:</strong> 2D Barycenter relaxation</li>
+                    <li><strong>pin_and_group_region:</strong> Set membership state locking</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 style="color: #a78bfa;">🛡️ Built-in Security Matrix</h3>
+                <ul>
+                    <li>Compiled Ajv v8 Schema validation on all tool inputs</li>
+                    <li>Native DOM EventTarget bus with zero socket overhead</li>
+                    <li>Pure reducers: mergeByKey, appendOnly, lastWriteWins</li>
+                    <li>Prohibits prototype pollution and untrusted label execution</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Testing & Verification -->
+    <div class="slide-viewport" id="slide-4">
+        <div class="badge" style="border-color: #10b981; color: #34d399;">Engineering Rigor</div>
+        <h1>131 / 131 Automated Tests Passing</h1>
+        <p class="subtitle">Production verification across Unit, E2E, and Security suites.</p>
+        <div class="metric-row">
+            <div class="metric-box">
+                <div class="metric-val">124</div>
+                <div class="metric-lbl">Vitest Unit Tests</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-val">7</div>
+                <div class="metric-lbl">Playwright Browser E2E</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-val">0 KB</div>
+                <div class="metric-lbl">Network Transmission</div>
+            </div>
+            <div class="metric-box">
+                <div class="metric-val">MIT</div>
+                <div class="metric-lbl">Open Source Certified</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Outro & Submission Links -->
+    <div class="slide-viewport" id="slide-5">
+        <div class="badge">OpenAI & Chrome Challenge Submission</div>
+        <h1>Nexus Weave</h1>
+        <p class="subtitle">Untangle What Machines Cannot See.</p>
+        <div class="card" style="max-width: 900px; text-align: center; margin-bottom: 24px;">
+            <h3 style="color: #818cf8; margin-bottom: 12px;">🔗 Live Evaluation URL</h3>
+            <p style="font-size: 32px; font-weight: 700; color: #ffffff;">https://nexus-weave.vercel.app</p>
+            <p style="font-size: 20px; color: #94a3b8; margin-top: 12px;">GitHub: github.com/piyushxlabs/nexus-weave</p>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide-viewport');
+        let cur = 0;
+        function show(idx) {
+            slides[cur].classList.remove('active');
+            cur = (idx + slides.length) % slides.length;
+            slides[cur].classList.add('active');
+        }
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') show(cur + 1);
+            if (e.key === 'ArrowLeft') show(cur - 1);
+        });
+    </script>
+</body>
+
+</html>

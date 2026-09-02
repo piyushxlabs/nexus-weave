@@ -290,8 +290,8 @@ export class GraphCanvas {
           tool_name: 'minimize_edge_crossings',
           region_node_ids: detail.region_node_ids,
           candidate_positions: (detail.preview?.candidate_positions as Record<string, { x: number; y: number }>) || {},
-          candidate_crossings: (detail.preview?.candidate_crossings as number) ?? 0,
-          initial_crossings: (detail.preview?.initial_crossings as number) ?? 0,
+          candidate_crossings: ((detail.preview?.candidate_crossings ?? detail.preview?.crossings_after) as number) ?? 0,
+          initial_crossings: ((detail.preview?.initial_crossings ?? detail.preview?.crossings_before) as number) ?? 0,
           status: 'proposed',
         };
         this.renderGhostOverlay();
