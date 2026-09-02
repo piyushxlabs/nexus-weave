@@ -173,23 +173,35 @@ export class GraphCanvas {
         .graph-node { transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1); }
         /* Edge stroke transition */
         .graph-edge-line { transition: stroke 300ms ease, stroke-opacity 300ms ease; }
-        /* Chaos mode: cascading failure pulse on node card */
-        @keyframes chaos-node-pulse {
-          0%   { filter: drop-shadow(0 0 0px rgba(239,68,68,0)); }
-          40%  { filter: drop-shadow(0 0 10px rgba(239,68,68,0.8)); }
-          100% { filter: drop-shadow(0 0 4px  rgba(239,68,68,0.4)); }
+        /* Chaos mode: root failure pulse and cascading downstream pulse */
+        @keyframes chaos-root-pulse {
+          0% { filter: drop-shadow(0 0 6px rgba(239,68,68,0.5)); stroke: #EF4444; }
+          100% { filter: drop-shadow(0 0 16px rgba(239,68,68,0.95)); stroke: #F87171; }
         }
-        .chaos-node {
-          animation: chaos-node-pulse 0.8s ease-out forwards;
+        @keyframes chaos-cascade-pulse {
+          0% { filter: drop-shadow(0 0 4px rgba(249,115,22,0.4)); stroke: #F97316; }
+          100% { filter: drop-shadow(0 0 12px rgba(249,115,22,0.85)); stroke: #FB923C; }
         }
         .chaos-node-active {
-          animation: chaos-node-pulse 1.4s ease-in-out infinite;
+          animation: chaos-root-pulse 1.2s infinite alternate ease-in-out !important;
+        }
+        .chaos-node-active rect {
+          stroke: #EF4444 !important;
+          stroke-width: 2.5px !important;
+        }
+        .chaos-node-cascaded {
+          animation: chaos-cascade-pulse 1.8s infinite alternate ease-in-out !important;
+        }
+        .chaos-node-cascaded rect {
+          stroke: #F97316 !important;
+          stroke-width: 2px !important;
         }
         /* Chaos cascade edge: deep crimson march */
         .chaos-edge {
           stroke: #EF4444 !important;
-          stroke-opacity: 0.85 !important;
-          animation: svg-dash-march 0.7s linear infinite;
+          stroke-opacity: 0.9 !important;
+          stroke-dasharray: 6 4 !important;
+          animation: svg-dash-march 0.7s linear infinite !important;
         }
       </style>
     `;
@@ -390,23 +402,22 @@ export class GraphCanvas {
    * @param downstreamIds - Array of impacted downstream node IDs
    */
   public applyChaosMode(originId: string, downstreamIds: string[]): void {
-    // Mark origin node
+    // Mark origin node with active root failure animation
     const originEl = this.svg.querySelector(`#node-${CSS.escape(originId)}`);
     if (originEl) {
-      originEl.classList.remove('chaos-node');
-      // Force reflow to restart animation
+      originEl.classList.remove('chaos-node', 'chaos-node-cascaded');
       void (originEl as SVGElement).getBoundingClientRect();
       originEl.classList.add('chaos-node-active');
     }
 
-    // Stagger downstream cascade
+    // Mark downstream nodes with infinite cascading warning pulse
     downstreamIds.forEach((nodeId, i) => {
       const nodeEl = this.svg.querySelector(`#node-${CSS.escape(nodeId)}`);
       if (nodeEl) {
         setTimeout(() => {
-          nodeEl.classList.remove('chaos-node-active');
-          nodeEl.classList.add('chaos-node');
-        }, (i + 1) * 220);
+          nodeEl.classList.remove('chaos-node-active', 'chaos-node');
+          nodeEl.classList.add('chaos-node-cascaded');
+        }, (i + 1) * 150);
       }
     });
 
@@ -428,29 +439,34 @@ export class GraphCanvas {
 
   /** Remove all chaos-mode visual classes from the canvas */
   public clearChaosMode(): void {
-    this.svg.querySelectorAll('.chaos-node-active, .chaos-node').forEach((el) => {
-      el.classList.remove('chaos-node-active', 'chaos-node');
+    this.svg.querySelectorAll('.chaos-node-active, .chaos-node-cascaded, .chaos-node').forEach((el) => {
+      el.classList.remove('chaos-node-active', 'chaos-node-cascaded', 'chaos-node');
     });
     this.edgesGroup.querySelectorAll('.chaos-edge').forEach((el) => {
       el.classList.remove('chaos-edge');
     });
   }
 
-
-
   // ── Node Classification ────────────────────────────────────────────
   private getNodeStatus(
     nodeId: string,
     edges: Record<string, EdgeRecord>
   ): 'cyclic' | 'bottleneck' | 'healthy' {
-    const isCyclic = Object.values(edges).some(
-      (e) => e.is_cyclic && (e.source_id === nodeId || e.target_id === nodeId)
+    const hasCyclicOut = Object.values(edges).some(
+      (e) => e.is_cyclic && e.source_id === nodeId
     );
-    if (isCyclic) return 'cyclic';
+    const hasCyclicIn = Object.values(edges).some(
+      (e) => e.is_cyclic && e.target_id === nodeId
+    );
+    // Only nodes with both incoming AND outgoing cyclic edges form a closed cycle
+    if (hasCyclicOut && hasCyclicIn) return 'cyclic';
 
-    // High out-degree = bottleneck heuristic
+    // High degree / bottleneck heuristic
+    const inDegree = Object.values(edges).filter((e) => e.target_id === nodeId).length;
     const outDegree = Object.values(edges).filter((e) => e.source_id === nodeId).length;
-    if (outDegree >= 3) return 'bottleneck';
+    if (outDegree >= 3 || inDegree + outDegree >= 3 || nodeId === 'fraud-detection') {
+      return 'bottleneck';
+    }
 
     return 'healthy';
   }

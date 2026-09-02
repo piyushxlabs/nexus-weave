@@ -98,6 +98,45 @@ export interface LayoutMinimizationSolution {
 export const MIN_DX = 165;
 export const MIN_DY = 80;
 
+export interface BoundingBox {
+  minX?: number;
+  maxX?: number;
+  minY?: number;
+  maxY?: number;
+}
+
+export const ARCHITECTURAL_TIER_BOUNDS: Record<string, BoundingBox> = {
+  'api-gateway': { maxX: 180, minY: 200, maxY: 400 },
+  'auth-service': { maxX: 300, minY: 50, maxY: 240 },
+  'user-service': { maxX: 320, minY: 360, maxY: 560 },
+  'catalog-service': { maxX: 320, minY: 200, maxY: 380 },
+  'pricing-service': { minX: 300, maxX: 480, minY: 80, maxY: 260 },
+  'order-service': { minX: 340, maxX: 500, minY: 220, maxY: 400 },
+  'inventory-service': { minX: 340, maxX: 500, minY: 360, maxY: 560 },
+  'payment-service': { minX: 500, maxX: 660, minY: 100, maxY: 260 },
+  'notification-service': { minX: 420, maxX: 600, minY: 20, maxY: 160 },
+  'fraud-detection': { minX: 500, maxX: 660, minY: 240, maxY: 400 },
+  'shipping-service': { minX: 660, maxX: 820, minY: 240, maxY: 400 },
+  'billing-service': { minX: 660, maxX: 820, minY: 100, maxY: 260 },
+  'analytics-service': { minX: 660, maxX: 820, minY: 360, maxY: 560 },
+  'email-worker': { minY: 0, maxY: 120 },
+  'sms-worker': { minY: 0, maxY: 120 },
+  'audit-logger': { minX: 800 },
+};
+
+/**
+ * Validates that a node position remains within its designated architectural tier zone.
+ */
+export function isWithinArchitecturalBounds(nodeId: string, pos: Point): boolean {
+  const bounds = ARCHITECTURAL_TIER_BOUNDS[nodeId];
+  if (!bounds) return true; // Generic fixture nodes are unconstrained
+  if (bounds.minX !== undefined && pos.x < bounds.minX) return false;
+  if (bounds.maxX !== undefined && pos.x > bounds.maxX) return false;
+  if (bounds.minY !== undefined && pos.y < bounds.minY) return false;
+  if (bounds.maxY !== undefined && pos.y > bounds.maxY) return false;
+  return true;
+}
+
 /**
  * Checks whether a specific node in the layout violates AABB clearance against any other node.
  */
@@ -138,7 +177,7 @@ export function hasNodeCollision(
 /**
  * Deterministic, bounded layout solver for edge crossing minimization.
  * Uses iterative coordinate swap & barycenter relaxation bounded by config.max_layout_iterations.
- * Strictly guarantees candidateCrossings <= initialCrossings and 0 AABB node collisions.
+ * Strictly guarantees candidateCrossings <= initialCrossings, 0 AABB node collisions, and architectural tier bounds.
  */
 export function solveEdgeCrossingMinimization(
   state: GraphAgentState,
@@ -194,6 +233,16 @@ export function solveEdgeCrossingMinimization(
         workingPositions[u].y = workingPositions[v].y;
         workingPositions[v].y = tempY;
 
+        // Architectural tier guard: reject swap if either node leaves its zone
+        if (
+          !isWithinArchitecturalBounds(u, workingPositions[u]) ||
+          !isWithinArchitecturalBounds(v, workingPositions[v])
+        ) {
+          workingPositions[v].y = workingPositions[u].y;
+          workingPositions[u].y = tempY;
+          continue;
+        }
+
         // Collision guard: reject swap if either moved node causes an AABB collision
         if (
           isNodeColliding(u, workingPositions, MIN_DX, MIN_DY) ||
@@ -235,7 +284,10 @@ export function solveEdgeCrossingMinimization(
         const oldY = workingPositions[u].y;
         workingPositions[u].y = avgY;
 
-        if (isNodeColliding(u, workingPositions, MIN_DX, MIN_DY)) {
+        if (
+          !isWithinArchitecturalBounds(u, workingPositions[u]) ||
+          isNodeColliding(u, workingPositions, MIN_DX, MIN_DY)
+        ) {
           workingPositions[u].y = oldY;
           continue;
         }
