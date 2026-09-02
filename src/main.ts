@@ -187,6 +187,21 @@ export function bootstrapNexusWeave(): NexusWeaveApp | null {
     });
   }
 
+  // 2d. Wire Floating Viewport Navigation Controls (Zoom In/Out, Reset)
+  const btnZoomIn = document.getElementById('btn-zoom-in');
+  const btnZoomOut = document.getElementById('btn-zoom-out');
+  const btnZoomReset = document.getElementById('btn-zoom-reset');
+
+  if (btnZoomIn) {
+    btnZoomIn.addEventListener('click', () => canvas.zoomIn(0.15));
+  }
+  if (btnZoomOut) {
+    btnZoomOut.addEventListener('click', () => canvas.zoomOut(0.15));
+  }
+  if (btnZoomReset) {
+    btnZoomReset.addEventListener('click', () => canvas.resetViewport());
+  }
+
   // 3. Mount In-Page Activity & Telemetry Panel
   const activityPanel = new ActivityPanel(activityPanelRoot);
 

@@ -910,6 +910,7 @@ export class GraphCanvas {
     this.scale = newScale;
 
     this.updateViewBox();
+    this.updateZoomDisplay();
   }
 
   private updateViewBox(): void {
@@ -1029,9 +1030,51 @@ export class GraphCanvas {
     this.viewY = Math.round(centerY - (usableCenterY / this.scale));
 
     this.updateViewBox();
+    this.updateZoomDisplay();
   }
 
   public resetViewport(): void {
     this.autoCenter(this.getState().graph_nodes, 1.15);
+  }
+
+  /** Zoom in viewport by a step factor (default: +0.15) */
+  public zoomIn(step: number = 0.15): void {
+    this.zoomBy(step);
+  }
+
+  /** Zoom out viewport by a step factor (default: -0.15) */
+  public zoomOut(step: number = 0.15): void {
+    this.zoomBy(-step);
+  }
+
+  /** Adjust viewport zoom scale centered on the current visible center */
+  private zoomBy(deltaScale: number): void {
+    const targetScale = Math.min(2.0, Math.max(0.5, this.scale + deltaScale));
+    if (Math.abs(targetScale - this.scale) < 0.001) return;
+
+    // Center of current view
+    const centerX = this.viewX + this.viewWidth / 2;
+    const centerY = this.viewY + this.viewHeight / 2;
+
+    const newViewWidth = this.width / targetScale;
+    const newViewHeight = this.height / targetScale;
+
+    this.viewX = centerX - newViewWidth / 2;
+    this.viewY = centerY - newViewHeight / 2;
+    this.viewWidth = newViewWidth;
+    this.viewHeight = newViewHeight;
+    this.scale = targetScale;
+
+    this.updateViewBox();
+    this.updateZoomDisplay();
+  }
+
+  /** Update the floating zoom level text badge in the DOM */
+  public updateZoomDisplay(): void {
+    if (typeof document === 'undefined') return;
+    const label = document.getElementById('lbl-zoom-level');
+    if (label) {
+      label.textContent = `${Math.round(this.scale * 100)}%`;
+    }
   }
 }

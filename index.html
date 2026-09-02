@@ -368,6 +368,95 @@
       .cyclic-edge {
         animation: neon-dash 1.2s linear infinite;
       }
+
+      /* Floating Viewport Controls (Bottom-Left) */
+      #canvas-viewport-controls {
+        position: absolute;
+        bottom: 24px;
+        left: 24px;
+        z-index: 40;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        pointer-events: auto;
+        user-select: none;
+      }
+
+      .viewport-toolbar {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(13, 17, 23, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 4px 6px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      }
+
+      .viewport-btn {
+        background: transparent;
+        border: none;
+        color: #94A3B8;
+        width: 26px;
+        height: 26px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s;
+        font-family: inherit;
+      }
+
+      .viewport-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #F8FAFC;
+      }
+
+      .viewport-btn:active {
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .viewport-zoom-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: #CBD5E1;
+        min-width: 38px;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .viewport-divider {
+        width: 1px;
+        height: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 0 2px;
+      }
+
+      .viewport-btn.reset-btn {
+        width: auto;
+        padding: 0 8px;
+        font-size: 11px;
+        font-weight: 500;
+        color: #A5B4FC;
+      }
+
+      .viewport-btn.reset-btn:hover {
+        background: rgba(99, 102, 241, 0.15);
+        color: #C7D2FE;
+      }
+
+      .viewport-hints {
+        font-size: 10px;
+        color: rgba(148, 163, 184, 0.55);
+        font-weight: 500;
+        padding-left: 2px;
+        letter-spacing: 0.01em;
+      }
     </style>
   </head>
   <body>
@@ -424,6 +513,18 @@
       <!-- ── Graph Canvas ──────────────────────────────────────────────── -->
       <main id="canvas-container" aria-label="Dependency graph visualization canvas">
         <svg id="graph-canvas" role="img" aria-label="Microservice dependency graph"></svg>
+
+        <!-- ── Floating Viewport Controls (Bottom-Left) ────────────────── -->
+        <div id="canvas-viewport-controls" aria-label="Canvas viewport navigation controls">
+          <div class="viewport-toolbar">
+            <button id="btn-zoom-out" class="viewport-btn" aria-label="Zoom Out" title="Zoom Out">−</button>
+            <span id="lbl-zoom-level" class="viewport-zoom-label" title="Current Zoom">115%</span>
+            <button id="btn-zoom-in" class="viewport-btn" aria-label="Zoom In" title="Zoom In">+</button>
+            <div class="viewport-divider" aria-hidden="true"></div>
+            <button id="btn-zoom-reset" class="viewport-btn reset-btn" aria-label="Reset Viewport" title="Reset Viewport">⟲ Reset</button>
+          </div>
+          <div class="viewport-hints">Drag canvas to pan • Scroll to zoom</div>
+        </div>
       </main>
 
       <!-- ── Activity Panel ────────────────────────────────────────────── -->
