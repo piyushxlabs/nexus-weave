@@ -22,6 +22,7 @@ import { validateDetectCyclesAndBottlenecksArgs } from './schemas/detectCyclesAn
 import { validateComputeCriticalPathArgs } from './schemas/computeCriticalPath.schema.js';
 import { validateMinimizeEdgeCrossingsArgs } from './schemas/minimizeEdgeCrossings.schema.js';
 import { validatePinAndGroupRegionArgs } from './schemas/pinAndGroupRegion.schema.js';
+import { handleGetGraphTopology } from './getGraphTopology.js';
 
 // ============================================================================
 // NexusWeave Error Hierarchy (AGENT_LOGIC_SPEC.md Section 9)
@@ -120,9 +121,15 @@ export function registerToolHandler(toolName: string, handler: ToolHandler): voi
   toolHandlers.set(toolName, handler);
 }
 
+export function initDefaultHandlers(): void {
+  toolHandlers.set('get_graph_topology', handleGetGraphTopology as unknown as ToolHandler);
+}
+
 export function clearToolHandlersForTesting(): void {
   toolHandlers.clear();
 }
+
+initDefaultHandlers();
 
 export const MUTATING_TOOL_NAMES = new Set([
   'minimize_edge_crossings',

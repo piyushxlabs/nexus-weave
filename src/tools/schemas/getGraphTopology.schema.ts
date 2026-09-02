@@ -10,6 +10,7 @@ export const GET_GRAPH_TOPOLOGY_NAME = 'get_graph_topology' as const;
 export type GetGraphTopologyInput = Record<string, never>;
 
 export interface GetGraphTopologyResult {
+  [key: string]: unknown;
   nodes: NodeRecord[];
   edges: EdgeRecord[];
   pinned_node_ids: string[];
