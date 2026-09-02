@@ -9,6 +9,9 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: true,
+    modulePreload: {
+      polyfill: false,
+    },
   },
   test: {
     include: ['tests/unit/**/*.{test,spec}.ts'],
