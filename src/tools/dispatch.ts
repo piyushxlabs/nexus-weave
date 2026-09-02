@@ -25,6 +25,10 @@ import { validatePinAndGroupRegionArgs } from './schemas/pinAndGroupRegion.schem
 import { handleGetGraphTopology } from './getGraphTopology.js';
 import { handleDetectCyclesAndBottlenecks } from './detectCyclesAndBottlenecks.js';
 import { handleComputeCriticalPath } from './computeCriticalPath.js';
+import {
+  handleMinimizeEdgeCrossings,
+  solveEdgeCrossingMinimization,
+} from './minimizeEdgeCrossings.js';
 
 // ============================================================================
 // NexusWeave Error Hierarchy (AGENT_LOGIC_SPEC.md Section 9)
@@ -127,6 +131,7 @@ export function initDefaultHandlers(): void {
   toolHandlers.set('get_graph_topology', handleGetGraphTopology as unknown as ToolHandler);
   toolHandlers.set('detect_cycles_and_bottlenecks', handleDetectCyclesAndBottlenecks as unknown as ToolHandler);
   toolHandlers.set('compute_critical_path', handleComputeCriticalPath as unknown as ToolHandler);
+  toolHandlers.set('minimize_edge_crossings', handleMinimizeEdgeCrossings as unknown as ToolHandler);
 }
 
 export function clearToolHandlersForTesting(): void {
@@ -392,19 +397,15 @@ function evaluateTrustAndScope(
 
     // If large mutation share or full graph without matching confirmation -> Approval-Gate
     if (isLargeMutation) {
-      const candidatePositions: Record<string, { x: number; y: number }> = {};
-      for (const id of regionNodeIds) {
-        const node = state.graph_nodes[id];
-        candidatePositions[id] = { x: node.x, y: node.y };
-      }
+      const solution = solveEdgeCrossingMinimization(state, regionNodeIds);
 
       const proposal: ProposedMutation = {
         tool_call_id: '',
         tool_name: 'minimize_edge_crossings',
         region_node_ids: regionNodeIds,
-        candidate_positions: candidatePositions,
-        initial_crossings: 0,
-        candidate_crossings: 0,
+        candidate_positions: solution.candidatePositions,
+        initial_crossings: solution.initialCrossings,
+        candidate_crossings: solution.candidateCrossings,
         status: 'proposed',
       };
 

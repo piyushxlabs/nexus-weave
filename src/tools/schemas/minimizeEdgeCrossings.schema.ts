@@ -13,6 +13,7 @@ export interface MinimizeEdgeCrossingsInput {
 }
 
 export interface MinimizeEdgeCrossingsResult {
+  [key: string]: unknown;
   affected_node_ids: string[];
   crossings_before: number;
   crossings_after: number;
