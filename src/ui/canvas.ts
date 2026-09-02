@@ -294,22 +294,34 @@ export class GraphCanvas {
     const edgesLabel = document.getElementById('hud-edges-label');
     const cyclesLabel = document.getElementById('hud-cycles-label');
     const layoutLabel = document.getElementById('hud-layout-label');
+    const badgeCycles = document.getElementById('badge-cycles');
+    const badgeLayout = document.getElementById('badge-layout');
 
     if (nodesLabel) nodesLabel.textContent = `Nodes: ${nodes.length}`;
     if (edgesLabel) edgesLabel.textContent = `Dependencies: ${edges.length}`;
-    if (cyclesLabel) {
+
+    if (cyclesLabel && badgeCycles && badgeCycles.getAttribute('aria-disabled') !== 'true') {
       if (cyclicCount > 0) {
-        cyclesLabel.textContent = `Active Cycles: ${cyclicCount} LOOP${cyclicCount > 1 ? 'S' : ''}`;
+        cyclesLabel.textContent = `Cycles: ${cyclicCount} Loop${cyclicCount > 1 ? 's' : ''}`;
+        badgeCycles.classList.add('danger');
+        badgeCycles.classList.remove('safe');
+      } else if (edges.some((e) => e.is_cyclic !== undefined)) {
+        // Scan was run and found no cycles
+        cyclesLabel.textContent = 'Cycles: None';
       } else {
-        cyclesLabel.textContent = `Cycles: None`;
+        // Never scanned
+        cyclesLabel.textContent = 'Cycles: Scan ▶';
       }
     }
-    if (layoutLabel) {
+
+    if (layoutLabel && badgeLayout && badgeLayout.getAttribute('aria-disabled') !== 'true') {
       const crossings = this.activeProposal?.initial_crossings;
       if (crossings !== undefined && crossings > 0) {
-        layoutLabel.textContent = `Layout: Tangled (${crossings} crossings)`;
+        layoutLabel.textContent = `Tangled: ${crossings} crossings`;
+      } else if (this.activeProposal) {
+        layoutLabel.textContent = 'Layout: Pending Approval';
       } else {
-        layoutLabel.textContent = `Layout: Ready`;
+        layoutLabel.textContent = 'Layout: Untangle ▶';
       }
     }
 
@@ -323,6 +335,20 @@ export class GraphCanvas {
         dot.style.background = supported ? '#10B981' : '#F59E0B';
       }
     }
+  }
+
+  /** Visually lock a HUD badge to show it is in-flight */
+  public setHUDBadgeBusy(badgeId: string, label: string): void {
+    const badge = document.getElementById(badgeId);
+    const labelEl = badge?.querySelector('span:last-child') as HTMLElement | null;
+    if (badge) badge.setAttribute('aria-disabled', 'true');
+    if (labelEl) labelEl.textContent = label;
+  }
+
+  /** Restore a HUD badge to interactive state */
+  public clearHUDBadgeBusy(badgeId: string): void {
+    const badge = document.getElementById(badgeId);
+    if (badge) badge.removeAttribute('aria-disabled');
   }
 
   // ── Node Classification ────────────────────────────────────────────

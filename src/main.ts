@@ -73,13 +73,74 @@ export function bootstrapNexusWeave(): NexusWeaveApp | null {
   const cyclesLabel = document.getElementById('hud-cycles-label');
   if (nodesLabel) nodesLabel.textContent = `Nodes: ${initNodes}`;
   if (edgesLabel) edgesLabel.textContent = `Dependencies: ${initEdges}`;
-  if (cyclesLabel) cyclesLabel.textContent = 'Cycles: Scan pending';
+  if (cyclesLabel) cyclesLabel.textContent = 'Cycles: Scan \u25b6';
+  const layoutLabelEl = document.getElementById('hud-layout-label');
+  if (layoutLabelEl) layoutLabelEl.textContent = 'Layout: Untangle \u25b6';
 
   // Update WebMCP status indicator in header
   const webmcpText = document.getElementById('webmcp-status-text');
   const webmcpDot = document.querySelector('.webmcp-status-dot') as HTMLElement | null;
   if (webmcpText) webmcpText.textContent = webmcpAvailable ? 'WebMCP Active' : 'Simulation Mode';
   if (webmcpDot) webmcpDot.style.background = webmcpAvailable ? '#10B981' : '#F59E0B';
+
+  // 2b. Wire interactive HUD badge buttons for browser agent auto-browse
+  // Each badge is guarded by an in-flight flag to prevent concurrent dispatches.
+  let cyclesBadgeBusy = false;
+  let layoutBadgeBusy = false;
+
+  const badgeCyclesEl = document.getElementById('badge-cycles');
+  const badgeLayoutEl = document.getElementById('badge-layout');
+
+  const handleCyclesBadgeClick = async () => {
+    if (cyclesBadgeBusy) return;
+    cyclesBadgeBusy = true;
+    canvas.setHUDBadgeBusy('badge-cycles', 'Scanning…');
+    try {
+      await dispatchToolCall('detect_cycles_and_bottlenecks', {}, stateAccessor);
+    } finally {
+      cyclesBadgeBusy = false;
+      canvas.clearHUDBadgeBusy('badge-cycles');
+    }
+  };
+
+  const handleLayoutBadgeClick = async () => {
+    if (layoutBadgeBusy) return;
+    layoutBadgeBusy = true;
+    canvas.setHUDBadgeBusy('badge-layout', 'Requesting…');
+    try {
+      const allNodeIds = Object.keys(stateAccessor.getState().graph_nodes);
+      await dispatchToolCall(
+        'minimize_edge_crossings',
+        { region_node_ids: allNodeIds },
+        stateAccessor
+      );
+    } finally {
+      layoutBadgeBusy = false;
+      canvas.clearHUDBadgeBusy('badge-layout');
+    }
+  };
+
+  if (badgeCyclesEl) {
+    badgeCyclesEl.addEventListener('click', handleCyclesBadgeClick);
+    badgeCyclesEl.addEventListener('keydown', (e: Event) => {
+      const ke = e as KeyboardEvent;
+      if (ke.key === 'Enter' || ke.key === ' ') {
+        ke.preventDefault();
+        void handleCyclesBadgeClick();
+      }
+    });
+  }
+
+  if (badgeLayoutEl) {
+    badgeLayoutEl.addEventListener('click', handleLayoutBadgeClick);
+    badgeLayoutEl.addEventListener('keydown', (e: Event) => {
+      const ke = e as KeyboardEvent;
+      if (ke.key === 'Enter' || ke.key === ' ') {
+        ke.preventDefault();
+        void handleLayoutBadgeClick();
+      }
+    });
+  }
 
   // 3. Mount In-Page Activity & Telemetry Panel
   const activityPanel = new ActivityPanel(activityPanelRoot);

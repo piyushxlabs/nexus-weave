@@ -204,6 +204,27 @@
         50% { opacity: 0.7; box-shadow: 0 0 0 3px rgba(244, 63, 94, 0); }
       }
 
+      /* Interactive clickable HUD pill variant */
+      .hud-pill-button {
+        cursor: pointer;
+        transition: opacity 0.15s, box-shadow 0.15s, transform 0.1s;
+      }
+      .hud-pill-button:hover {
+        opacity: 0.9;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+        transform: translateY(-1px);
+      }
+      .hud-pill-button:active {
+        transform: translateY(0);
+        box-shadow: none;
+        opacity: 0.7;
+      }
+      .hud-pill-button[aria-disabled='true'] {
+        cursor: wait;
+        opacity: 0.55;
+        pointer-events: none;
+      }
+
       /* Right: WebMCP Status */
       .header-status {
         display: flex;
@@ -327,11 +348,11 @@
             <span class="hud-pill-dot" aria-hidden="true"></span>
             <span id="hud-edges-label">Dependencies: —</span>
           </div>
-          <div class="hud-pill danger" id="hud-cycles" title="Active circular dependency loops detected">
+          <div class="hud-pill danger hud-pill-button" id="badge-cycles" title="Scan for circular dependency loops — click to run" role="button" aria-label="Run cycle detection" tabindex="0">
             <span class="hud-pill-dot" aria-hidden="true"></span>
             <span id="hud-cycles-label">Cycles: —</span>
           </div>
-          <div class="hud-pill warning" id="hud-layout" title="Current layout crossing state">
+          <div class="hud-pill warning hud-pill-button" id="badge-layout" title="Untangle layout crossings — click to request minimization" role="button" aria-label="Minimize edge crossings" tabindex="0">
             <span class="hud-pill-dot" aria-hidden="true"></span>
             <span id="hud-layout-label">Layout: Ready</span>
           </div>
