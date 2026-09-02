@@ -46,7 +46,7 @@ export class GraphCanvas {
   private viewY: number = 0;
   private viewWidth: number;
   private viewHeight: number;
-  private scale: number = 1.0;
+  private scale: number = 1.15;
   private isPanning: boolean = false;
   private panStart: { x: number; y: number } = { x: 0, y: 0 };
   private panViewStart: { x: number; y: number } = { x: 0, y: 0 };
@@ -57,11 +57,12 @@ export class GraphCanvas {
     this.setState = options.setState;
     this.width = options.width || 1200;
     this.height = options.height || 800;
-    this.viewWidth = this.width;
-    this.viewHeight = this.height;
+    this.viewWidth = this.width / this.scale;
+    this.viewHeight = this.height / this.scale;
 
     this.initCanvasStructure();
     this.setupBusListeners();
+    this.autoCenter(this.getState().graph_nodes, 1.15);
     this.render();
   }
 
@@ -526,9 +527,9 @@ export class GraphCanvas {
       g.setAttribute('cursor', 'grab');
       g.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
 
-      // Card width/height
-      const cardW = 120;
-      const cardH = 52;
+      // Card width/height (slightly boosted for sharpness & video recording prominence)
+      const cardW = 132;
+      const cardH = 56;
       const cardX = -(cardW / 2);
       const cardY = -(cardH / 2);
 
@@ -581,8 +582,8 @@ export class GraphCanvas {
       g.appendChild(innerHighlight);
 
       // ── Status LED dot (top-left) ───────────────────────────────
-      const ledX = cardX + 10;
-      const ledY = cardY + 13;
+      const ledX = cardX + 12;
+      const ledY = cardY + 15;
       const led = document.createElementNS(SVG_NS, 'circle');
       led.setAttribute('cx', String(ledX));
       led.setAttribute('cy', String(ledY));
@@ -603,10 +604,10 @@ export class GraphCanvas {
       // ── Node label text (strictly .textContent — untrusted) ─────
       const labelText = document.createElementNS(SVG_NS, 'text');
       labelText.setAttribute('x', String(cardX + cardW / 2 + 2)); // offset right of LED
-      labelText.setAttribute('y', String(cardY + 17));
+      labelText.setAttribute('y', String(cardY + 18));
       labelText.setAttribute('text-anchor', 'middle');
       labelText.setAttribute('dominant-baseline', 'middle');
-      labelText.setAttribute('font-size', '10.5');
+      labelText.setAttribute('font-size', '11');
       labelText.setAttribute('font-weight', '600');
       labelText.setAttribute('fill', '#F3F4F6');
       labelText.setAttribute('font-family', 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif');
@@ -617,9 +618,9 @@ export class GraphCanvas {
       // ── Divider line ────────────────────────────────────────────
       const divider = document.createElementNS(SVG_NS, 'line');
       divider.setAttribute('x1', String(cardX + 1));
-      divider.setAttribute('y1', String(cardY + 28));
+      divider.setAttribute('y1', String(cardY + 30));
       divider.setAttribute('x2', String(cardX + cardW - 1));
-      divider.setAttribute('y2', String(cardY + 28));
+      divider.setAttribute('y2', String(cardY + 30));
       divider.setAttribute('stroke', 'rgba(255,255,255,0.06)');
       divider.setAttribute('stroke-width', '1');
       g.appendChild(divider);
@@ -628,10 +629,10 @@ export class GraphCanvas {
       // E2E strict locator '#node-X text' which must match exactly ONE element)
       if (node.duration != null) {
         const pillBg = document.createElementNS(SVG_NS, 'rect');
-        pillBg.setAttribute('x', String(cardX + 6));
-        pillBg.setAttribute('y', String(cardY + 32));
-        pillBg.setAttribute('width', '44');
-        pillBg.setAttribute('height', '13');
+        pillBg.setAttribute('x', String(cardX + 7));
+        pillBg.setAttribute('y', String(cardY + 34));
+        pillBg.setAttribute('width', '46');
+        pillBg.setAttribute('height', '14');
         pillBg.setAttribute('rx', '3');
         pillBg.setAttribute('fill', 'rgba(17,24,55,0.8)');
         pillBg.setAttribute('stroke', 'rgba(99,102,241,0.25)');
@@ -645,8 +646,8 @@ export class GraphCanvas {
         // Three small circles to hint "data present" — decorative, no text node
         for (let dot = 0; dot < 3; dot++) {
           const dotEl = document.createElementNS(SVG_NS, 'circle');
-          dotEl.setAttribute('cx', String(cardX + 16 + dot * 8));
-          dotEl.setAttribute('cy', String(cardY + 38.5));
+          dotEl.setAttribute('cx', String(cardX + 17 + dot * 8));
+          dotEl.setAttribute('cy', String(cardY + 41));
           dotEl.setAttribute('r', '1.5');
           dotEl.setAttribute('fill', '#374151');
           g.appendChild(dotEl);
@@ -657,7 +658,7 @@ export class GraphCanvas {
       const pinBadge = createPinBadgeElement({
         nodeId: id,
         isPinned,
-        x: Math.floor(cardW / 2) - 16,
+        x: Math.floor(cardW / 2) - 18,
         y: cardY - 8,
         onToggle: (nId, nextPinned) => this.handlePinToggle(nId, nextPinned),
       });
@@ -691,10 +692,10 @@ export class GraphCanvas {
       g.setAttribute('opacity', '0.75');
 
       const rect = document.createElementNS(SVG_NS, 'rect');
-      rect.setAttribute('x', '-60');
-      rect.setAttribute('y', '-26');
-      rect.setAttribute('width', '120');
-      rect.setAttribute('height', '52');
+      rect.setAttribute('x', '-66');
+      rect.setAttribute('y', '-28');
+      rect.setAttribute('width', '132');
+      rect.setAttribute('height', '56');
       rect.setAttribute('rx', '10');
       rect.setAttribute('ry', '10');
       rect.setAttribute('fill', 'rgba(99,102,241,0.08)');
@@ -956,12 +957,81 @@ export class GraphCanvas {
     };
   }
 
-  public resetViewport(): void {
-    this.scale = 1.0;
-    this.viewX = 0;
-    this.viewY = 0;
-    this.viewWidth = this.width;
-    this.viewHeight = this.height;
+  /** Calculate collective bounding box and centroid of all graph nodes */
+  private calculateGraphBoundingBox(nodes: Record<string, NodeRecord>): {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+    centerX: number;
+    centerY: number;
+  } {
+    const nodeEntries = Object.values(nodes);
+    if (nodeEntries.length === 0) {
+      return {
+        minX: 0,
+        maxX: this.width,
+        minY: 0,
+        maxY: this.height,
+        centerX: this.width / 2,
+        centerY: this.height / 2,
+      };
+    }
+
+    const halfW = 66; // cardW / 2 (cardW = 132)
+    const halfH = 28; // cardH / 2 (cardH = 56)
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+
+    for (const n of nodeEntries) {
+      if (n.x - halfW < minX) minX = n.x - halfW;
+      if (n.x + halfW > maxX) maxX = n.x + halfW;
+      if (n.y - halfH < minY) minY = n.y - halfH;
+      if (n.y + halfH > maxY) maxY = n.y + halfH;
+    }
+
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+
+    return { minX, maxX, minY, maxY, centerX, centerY };
+  }
+
+  /**
+   * Auto-centers the graph bounding box in the viewport, accounting for UI overlays:
+   * top header padding (~70px) and bottom telemetry dock padding (~90px).
+   * @param nodes - Node records to center (defaults to current state nodes)
+   * @param targetScale - Viewport zoom factor (defaults to 1.15x for crisp readability)
+   */
+  public autoCenter(
+    nodes?: Record<string, NodeRecord>,
+    targetScale: number = 1.15
+  ): void {
+    const activeNodes = nodes || this.getState().graph_nodes;
+    const { centerX, centerY } = this.calculateGraphBoundingBox(activeNodes);
+
+    // Clamped scale
+    this.scale = Math.min(2.0, Math.max(0.5, targetScale));
+    this.viewWidth = this.width / this.scale;
+    this.viewHeight = this.height / this.scale;
+
+    // Viewport usable center offsets (70px top header, 90px bottom dock)
+    const topPadding = 70;
+    const bottomPadding = 90;
+    const usableHeight = Math.max(200, this.height - topPadding - bottomPadding);
+    const usableCenterY = topPadding + usableHeight / 2;
+    const usableCenterX = this.width / 2;
+
+    // Align graph centroid with the usable viewport center
+    this.viewX = Math.round(centerX - (usableCenterX / this.scale));
+    this.viewY = Math.round(centerY - (usableCenterY / this.scale));
+
     this.updateViewBox();
+  }
+
+  public resetViewport(): void {
+    this.autoCenter(this.getState().graph_nodes, 1.15);
   }
 }

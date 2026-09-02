@@ -338,7 +338,7 @@ describe('Step 16: UI Components & Affordances', () => {
         },
       });
 
-      expect(svg.getAttribute('viewBox')).toBe('0 0 1200 800');
+      expect(svg.getAttribute('viewBox')).toContain('-22 -89');
       // Children should include defs, edges-layer, ghost-layer, nodes-layer, status-pill-layer
       expect(svg.children.length).toBeGreaterThanOrEqual(5);
 
@@ -360,12 +360,12 @@ describe('Step 16: UI Components & Affordances', () => {
         },
       });
 
-      // Initial viewport state
+      // Initial auto-centered viewport state (scale: 1.15x)
       const initialViewport = canvas.getViewport();
-      expect(initialViewport.viewX).toBe(0);
-      expect(initialViewport.viewY).toBe(0);
-      expect(initialViewport.scale).toBe(1.0);
-      expect(svg.getAttribute('viewBox')).toBe('0 0 1200 800');
+      expect(initialViewport.viewX).toBe(-22);
+      expect(initialViewport.viewY).toBe(-89);
+      expect(initialViewport.scale).toBe(1.15);
+      expect(svg.getAttribute('viewBox')).toContain('-22 -89');
 
       // Test wheel zoom in (negative deltaY)
       const mockWheelEventIn = {
@@ -378,7 +378,7 @@ describe('Step 16: UI Components & Affordances', () => {
       (svg as any).dispatchEvent(mockWheelEventIn);
 
       const zoomedViewport = canvas.getViewport();
-      expect(zoomedViewport.scale).toBeGreaterThan(1.0);
+      expect(zoomedViewport.scale).toBeGreaterThan(1.15);
       expect(zoomedViewport.scale).toBeLessThanOrEqual(2.0);
 
       // Test wheel zoom out (positive deltaY)
@@ -395,13 +395,13 @@ describe('Step 16: UI Components & Affordances', () => {
       expect(zoomedOutViewport.scale).toBeLessThan(zoomedViewport.scale);
       expect(zoomedOutViewport.scale).toBeGreaterThanOrEqual(0.5);
 
-      // Test resetViewport restores initial coordinates
+      // Test resetViewport restores initial auto-centered coordinates
       canvas.resetViewport();
       const resetViewport = canvas.getViewport();
-      expect(resetViewport.viewX).toBe(0);
-      expect(resetViewport.viewY).toBe(0);
-      expect(resetViewport.scale).toBe(1.0);
-      expect(svg.getAttribute('viewBox')).toBe('0 0 1200 800');
+      expect(resetViewport.viewX).toBe(-22);
+      expect(resetViewport.viewY).toBe(-89);
+      expect(resetViewport.scale).toBe(1.15);
+      expect(svg.getAttribute('viewBox')).toContain('-22 -89');
 
       canvas.destroy();
     });
