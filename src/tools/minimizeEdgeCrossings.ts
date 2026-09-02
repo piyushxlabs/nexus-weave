@@ -95,8 +95,8 @@ export interface LayoutMinimizationSolution {
   affectedNodeIds: string[];
 }
 
-export const MIN_DX = 165;
-export const MIN_DY = 80;
+export const MIN_DX = 135;
+export const MIN_DY = 60;
 
 export interface BoundingBox {
   minX?: number;
@@ -106,9 +106,9 @@ export interface BoundingBox {
 }
 
 export const ARCHITECTURAL_TIER_BOUNDS: Record<string, BoundingBox> = {
-  'api-gateway': { maxX: 120, minY: 200, maxY: 600 },
-  'auth-service': { minX: 180, maxX: 300, minY: 100, maxY: 300 },
-  'catalog-service': { minX: 220, maxX: 340, minY: 300, maxY: 480 },
+  'api-gateway': { maxX: 120, minY: 380, maxY: 540 },
+  'auth-service': { minX: 180, maxX: 300, minY: 100, maxY: 480 },
+  'catalog-service': { minX: 220, maxX: 340, minY: 100, maxY: 480 },
   'user-service': { minX: 220, maxX: 340, minY: 480, maxY: 680 },
   'pricing-service': { minX: 340, maxX: 500, minY: 80, maxY: 260 },
   'order-service': { minX: 380, maxX: 540, minY: 260, maxY: 460 },
@@ -116,8 +116,8 @@ export const ARCHITECTURAL_TIER_BOUNDS: Record<string, BoundingBox> = {
   'payment-service': { minX: 540, maxX: 700, minY: 120, maxY: 300 },
   'notification-service': { minX: 440, maxX: 620, minY: 20, maxY: 160 },
   'fraud-detection': { minX: 540, maxX: 700, minY: 280, maxY: 460 },
-  'shipping-service': { minX: 700, maxX: 880, minY: 280, maxY: 460 },
-  'billing-service': { minX: 700, maxX: 880, minY: 120, maxY: 300 },
+  'shipping-service': { minX: 700, maxX: 880, minY: 120, maxY: 460 },
+  'billing-service': { minX: 700, maxX: 880, minY: 120, maxY: 460 },
   'analytics-service': { minX: 700, maxX: 880, minY: 440, maxY: 640 },
   'email-worker': { minY: 0, maxY: 120 },
   'sms-worker': { minY: 0, maxY: 120 },

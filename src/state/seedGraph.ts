@@ -206,9 +206,9 @@ export const SEED_EDGES: Record<string, EdgeRecord> = {
     is_cyclic: null,
     is_critical: null,
   },
-  e_catalog_order: {
-    id: 'e_catalog_order',
-    source_id: 'catalog-service',
+  e_auth_order: {
+    id: 'e_auth_order',
+    source_id: 'auth-service',
     target_id: 'order-service',
     is_cyclic: null,
     is_critical: null,

@@ -4,6 +4,7 @@ import {
   doSegmentsIntersect,
   countCrossings,
   solveEdgeCrossingMinimization,
+  ARCHITECTURAL_TIER_BOUNDS,
 } from '../../src/tools/minimizeEdgeCrossings.js';
 import {
   createInitialState,
@@ -252,6 +253,12 @@ describe('Node 4: minimize_edge_crossings Tool Handler', () => {
       expect(confirmResponse.status).toBe('applied');
       // Proposal must be cleared
       expect(state.pending_proposal).toBeNull();
+    });
+    it('seedGraph has exactly 2 crossings initially and untangles to 0', () => {
+      const solution = solveEdgeCrossingMinimization(state, Object.keys(state.graph_nodes));
+      expect(solution.initialCrossings).toBe(2);
+      expect(solution.candidateCrossings).toBe(0);
+      expect(solution.affectedNodeIds).toContain('auth-service');
     });
   });
 });
