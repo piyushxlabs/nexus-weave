@@ -13,6 +13,7 @@ export interface PinAndGroupRegionInput {
 }
 
 export interface PinAndGroupRegionResult {
+  [key: string]: unknown;
   updated_node_ids: string[];
   pinned: boolean;
 }

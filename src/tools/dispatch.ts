@@ -29,6 +29,7 @@ import {
   handleMinimizeEdgeCrossings,
   solveEdgeCrossingMinimization,
 } from './minimizeEdgeCrossings.js';
+import { handlePinAndGroupRegion } from './pinAndGroupRegion.js';
 
 // ============================================================================
 // NexusWeave Error Hierarchy (AGENT_LOGIC_SPEC.md Section 9)
@@ -132,6 +133,7 @@ export function initDefaultHandlers(): void {
   toolHandlers.set('detect_cycles_and_bottlenecks', handleDetectCyclesAndBottlenecks as unknown as ToolHandler);
   toolHandlers.set('compute_critical_path', handleComputeCriticalPath as unknown as ToolHandler);
   toolHandlers.set('minimize_edge_crossings', handleMinimizeEdgeCrossings as unknown as ToolHandler);
+  toolHandlers.set('pin_and_group_region', handlePinAndGroupRegion as unknown as ToolHandler);
 }
 
 export function clearToolHandlersForTesting(): void {
