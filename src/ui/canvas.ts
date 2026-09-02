@@ -168,6 +168,28 @@ export class GraphCanvas {
         .led-critical { animation: svg-led-pulse 1s ease-in-out infinite; }
         .graph-node { cursor: grab; }
         .graph-node:active { cursor: grabbing; }
+        /* Smooth coordinate glide on Approve & Apply */
+        .graph-node { transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1); }
+        /* Edge stroke transition */
+        .graph-edge-line { transition: stroke 300ms ease, stroke-opacity 300ms ease; }
+        /* Chaos mode: cascading failure pulse on node card */
+        @keyframes chaos-node-pulse {
+          0%   { filter: drop-shadow(0 0 0px rgba(239,68,68,0)); }
+          40%  { filter: drop-shadow(0 0 10px rgba(239,68,68,0.8)); }
+          100% { filter: drop-shadow(0 0 4px  rgba(239,68,68,0.4)); }
+        }
+        .chaos-node {
+          animation: chaos-node-pulse 0.8s ease-out forwards;
+        }
+        .chaos-node-active {
+          animation: chaos-node-pulse 1.4s ease-in-out infinite;
+        }
+        /* Chaos cascade edge: deep crimson march */
+        .chaos-edge {
+          stroke: #EF4444 !important;
+          stroke-opacity: 0.85 !important;
+          animation: svg-dash-march 0.7s linear infinite;
+        }
       </style>
     `;
     this.svg.appendChild(defs);
@@ -325,6 +347,13 @@ export class GraphCanvas {
       }
     }
 
+    // Pinned count pill
+    const pinnedLabel = document.getElementById('hud-pinned-label');
+    if (pinnedLabel) {
+      const pinnedCount = state.pinned_node_ids.size;
+      pinnedLabel.textContent = `Pinned: ${pinnedCount}`;
+    }
+
     // Update WebMCP status text
     const webmcpText = document.getElementById('webmcp-status-text');
     if (webmcpText) {
@@ -350,6 +379,62 @@ export class GraphCanvas {
     const badge = document.getElementById(badgeId);
     if (badge) badge.removeAttribute('aria-disabled');
   }
+
+  /**
+   * Apply chaos-mode visual pulse to a set of node IDs (pure presentation — no GraphAgentState mutation).
+   * The origin node gets a sustained chaos-node-active pulse; downstream nodes get a one-shot cascade.
+   * Downstream edge lines are marked with chaos-edge class for the crimson march animation.
+   * @param originId - The node ID of the failing service (e.g. 'payment-service')
+   * @param downstreamIds - Array of impacted downstream node IDs
+   */
+  public applyChaosMode(originId: string, downstreamIds: string[]): void {
+    // Mark origin node
+    const originEl = this.svg.querySelector(`#node-${CSS.escape(originId)}`);
+    if (originEl) {
+      originEl.classList.remove('chaos-node');
+      // Force reflow to restart animation
+      void (originEl as SVGElement).getBoundingClientRect();
+      originEl.classList.add('chaos-node-active');
+    }
+
+    // Stagger downstream cascade
+    downstreamIds.forEach((nodeId, i) => {
+      const nodeEl = this.svg.querySelector(`#node-${CSS.escape(nodeId)}`);
+      if (nodeEl) {
+        setTimeout(() => {
+          nodeEl.classList.remove('chaos-node-active');
+          nodeEl.classList.add('chaos-node');
+        }, (i + 1) * 220);
+      }
+    });
+
+    // Mark downstream edges with chaos styling
+    this.edgesGroup.querySelectorAll('line').forEach((line) => {
+      const edgeId = line.getAttribute('data-edge-id') ?? '';
+      const state = this.getState();
+      const edge = state.graph_edges[edgeId];
+      if (!edge) return;
+      const involvedInChaos =
+        edge.source_id === originId ||
+        downstreamIds.includes(edge.source_id) ||
+        downstreamIds.includes(edge.target_id);
+      if (involvedInChaos) {
+        line.classList.add('chaos-edge');
+      }
+    });
+  }
+
+  /** Remove all chaos-mode visual classes from the canvas */
+  public clearChaosMode(): void {
+    this.svg.querySelectorAll('.chaos-node-active, .chaos-node').forEach((el) => {
+      el.classList.remove('chaos-node-active', 'chaos-node');
+    });
+    this.edgesGroup.querySelectorAll('.chaos-edge').forEach((el) => {
+      el.classList.remove('chaos-edge');
+    });
+  }
+
+
 
   // ── Node Classification ────────────────────────────────────────────
   private getNodeStatus(
@@ -382,6 +467,7 @@ export class GraphCanvas {
 
       const line = document.createElementNS(SVG_NS, 'line');
       line.setAttribute('id', `edge-${id}`);
+      line.setAttribute('data-edge-id', id);
       line.setAttribute('x1', String(source.x));
       line.setAttribute('y1', String(source.y));
       line.setAttribute('x2', String(target.x));
@@ -389,6 +475,7 @@ export class GraphCanvas {
 
       // 60 FPS smooth transitions
       line.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+
 
       if (edge.is_cyclic) {
         // High-voltage crimson/rose neon — animated dashed stroke

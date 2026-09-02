@@ -199,9 +199,53 @@
       }
       .hud-pill.warning .hud-pill-dot { background: #F59E0B; }
 
+      .hud-pill.pinned {
+        background: rgba(6, 182, 212, 0.08);
+        border: 1px solid rgba(6, 182, 212, 0.22);
+        color: #67E8F9;
+      }
+      .hud-pill.pinned .hud-pill-dot { background: #06B6D4; }
+
       @keyframes pulse-dot {
         0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.5); }
         50% { opacity: 0.7; box-shadow: 0 0 0 3px rgba(244, 63, 94, 0); }
+      }
+
+      @keyframes chaos-cascade {
+        0%   { box-shadow: 0 0 0 0   rgba(239, 68, 68, 0.0); }
+        30%  { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.5); }
+        70%  { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0.2); }
+        100% { box-shadow: 0 0 0 0   rgba(239, 68, 68, 0.0); }
+      }
+
+      /* Chaos Engineering button */
+      #chaos-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 11px;
+        border-radius: 6px;
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.28);
+        color: #FCA5A5;
+        font-size: 11px;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+        transition: background 0.15s, box-shadow 0.15s;
+        user-select: none;
+      }
+      #chaos-btn:hover {
+        background: rgba(239, 68, 68, 0.18);
+        box-shadow: 0 0 10px rgba(239, 68, 68, 0.25);
+      }
+      #chaos-btn:active { opacity: 0.75; }
+      #chaos-btn[aria-pressed='true'] {
+        background: rgba(239, 68, 68, 0.22);
+        border-color: rgba(239, 68, 68, 0.5);
+        color: #F87171;
       }
 
       /* Interactive clickable HUD pill variant */
@@ -354,7 +398,11 @@
           </div>
           <div class="hud-pill warning hud-pill-button" id="badge-layout" title="Untangle layout crossings — click to request minimization" role="button" aria-label="Minimize edge crossings" tabindex="0">
             <span class="hud-pill-dot" aria-hidden="true"></span>
-            <span id="hud-layout-label">Layout: Ready</span>
+            <span id="hud-layout-label">Layout: Untangle ▶</span>
+          </div>
+          <div class="hud-pill pinned" id="hud-pinned" title="Nodes pinned by you or the agent">
+            <span class="hud-pill-dot" aria-hidden="true"></span>
+            <span id="hud-pinned-label">Pinned: 0</span>
           </div>
         </nav>
 
@@ -364,6 +412,9 @@
             <span class="webmcp-status-dot" aria-hidden="true"></span>
             <span id="webmcp-status-text">Simulation Mode</span>
           </div>
+          <button id="chaos-btn" aria-label="Inject Payment Gateway chaos outage" aria-pressed="false" title="Simulate a cascading Payment Gateway failure">
+            ⚡ Inject Chaos: Payment Outage
+          </button>
         </div>
       </header>
 

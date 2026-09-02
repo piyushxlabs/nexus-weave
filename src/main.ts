@@ -13,6 +13,8 @@ import { GraphCanvas } from './ui/canvas.js';
 import { ActivityPanel } from './ui/activityPanel.js';
 import { renderUnsupportedBanner } from './ui/unsupportedBanner.js';
 import { setupProposalBannerListener } from './ui/proposalBanner.js';
+import { activityBus } from './ui/activityBus.js';
+
 
 export interface NexusWeaveApp {
   state: () => GraphAgentState;
@@ -142,8 +144,52 @@ export function bootstrapNexusWeave(): NexusWeaveApp | null {
     });
   }
 
+  // 2c. Wire Chaos Engineering button — pure UI simulation, zero GraphAgentState mutation
+  const chaosBtn = document.getElementById('chaos-btn') as HTMLButtonElement | null;
+  // Hardcoded to the seed graph's Payment Gateway and its known downstream dependents
+  const CHAOS_ORIGIN = 'payment-service';
+  const CHAOS_DOWNSTREAM = ['notification-service', 'order-service'];
+  let chaosActive = false;
+
+  if (chaosBtn) {
+    chaosBtn.addEventListener('click', () => {
+      if (!chaosActive) {
+        // Activate: apply visual cascade and emit telemetry log entry
+        chaosActive = true;
+        chaosBtn.setAttribute('aria-pressed', 'true');
+        chaosBtn.textContent = '\u26a1 Clear Chaos Simulation';
+
+        canvas.applyChaosMode(CHAOS_ORIGIN, CHAOS_DOWNSTREAM);
+
+        // Emit structured chaos event to in-page activity bus (telemetry log)
+        activityBus.emit('tool-invocation-result', {
+          tool_call_id: `chaos-${Date.now()}`,
+          tool_name: 'chaos_inject',
+          success: true,
+          status: 'applied',
+          result: {
+            message:
+              '[CHAOS_INJECTED] Payment Gateway failure cascaded across 3 downstream services',
+            origin: CHAOS_ORIGIN,
+            affected: CHAOS_DOWNSTREAM,
+            simulated_latency_ms: 9999,
+            simulated_error_rate: 1.0,
+          },
+          timestamp: Date.now(),
+        });
+      } else {
+        // Deactivate: restore canvas
+        chaosActive = false;
+        chaosBtn.setAttribute('aria-pressed', 'false');
+        chaosBtn.textContent = '\u26a1 Inject Chaos: Payment Outage';
+        canvas.clearChaosMode();
+      }
+    });
+  }
+
   // 3. Mount In-Page Activity & Telemetry Panel
   const activityPanel = new ActivityPanel(activityPanelRoot);
+
 
   // 4. Setup Proposal Banner Listener for Human-in-the-Loop Resumption
   const unbindProposalListener = setupProposalBannerListener(bannerRoot, {
