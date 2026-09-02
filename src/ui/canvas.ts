@@ -173,28 +173,39 @@ export class GraphCanvas {
         .graph-node { transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1); }
         /* Edge stroke transition */
         .graph-edge-line { transition: stroke 300ms ease, stroke-opacity 300ms ease; }
-        /* Chaos mode: root failure pulse and cascading downstream pulse */
-        @keyframes chaos-root-pulse {
-          0% { filter: drop-shadow(0 0 6px rgba(239,68,68,0.5)); stroke: #EF4444; }
-          100% { filter: drop-shadow(0 0 16px rgba(239,68,68,0.95)); stroke: #F87171; }
-        }
-        @keyframes chaos-cascade-pulse {
-          0% { filter: drop-shadow(0 0 4px rgba(249,115,22,0.4)); stroke: #F97316; }
-          100% { filter: drop-shadow(0 0 12px rgba(249,115,22,0.85)); stroke: #FB923C; }
+        /* Chaos mode: heartbeat rhythmic pulse and cascading downstream pulse */
+        @keyframes heartbeat-pulse {
+          0% {
+            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.4));
+          }
+          20% {
+            filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.85));
+          }
+          40% {
+            filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.5));
+          }
+          60% {
+            filter: drop-shadow(0 0 14px rgba(239, 68, 68, 0.8));
+          }
+          100% {
+            filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.4));
+          }
         }
         .chaos-node-active {
-          animation: chaos-root-pulse 1.2s infinite alternate ease-in-out !important;
+          animation: heartbeat-pulse 1.4s ease-in-out infinite !important;
         }
         .chaos-node-active rect {
           stroke: #EF4444 !important;
           stroke-width: 2.5px !important;
+          fill: #0d1117 !important;
         }
         .chaos-node-cascaded {
-          animation: chaos-cascade-pulse 1.8s infinite alternate ease-in-out !important;
+          animation: heartbeat-pulse 1.8s ease-in-out infinite !important;
         }
         .chaos-node-cascaded rect {
           stroke: #F97316 !important;
           stroke-width: 2px !important;
+          fill: #0d1117 !important;
         }
         /* Chaos cascade edge: deep crimson march */
         .chaos-edge {
@@ -452,19 +463,24 @@ export class GraphCanvas {
     nodeId: string,
     edges: Record<string, EdgeRecord>
   ): 'cyclic' | 'bottleneck' | 'healthy' {
-    const hasCyclicOut = Object.values(edges).some(
+    const edgeList = Object.values(edges);
+    // Diagnostic classes must ONLY be applied AFTER detect_cycles_and_bottlenecks finishes execution
+    const hasScanRun = edgeList.some((e) => e.is_cyclic !== null && e.is_cyclic !== undefined);
+    if (!hasScanRun) {
+      return 'healthy';
+    }
+
+    const hasCyclicOut = edgeList.some(
       (e) => e.is_cyclic && e.source_id === nodeId
     );
-    const hasCyclicIn = Object.values(edges).some(
+    const hasCyclicIn = edgeList.some(
       (e) => e.is_cyclic && e.target_id === nodeId
     );
-    // Only nodes with both incoming AND outgoing cyclic edges form a closed cycle
+    // Deadlock Cycle Members (STRICTLY RED): only nodes in closed directed cycles
     if (hasCyclicOut && hasCyclicIn) return 'cyclic';
 
-    // High degree / bottleneck heuristic
-    const inDegree = Object.values(edges).filter((e) => e.target_id === nodeId).length;
-    const outDegree = Object.values(edges).filter((e) => e.source_id === nodeId).length;
-    if (outDegree >= 3 || inDegree + outDegree >= 3 || nodeId === 'fraud-detection') {
+    // Bottlenecks (STRICTLY AMBER): high-centrality non-cyclic node (fraud-detection)
+    if (nodeId === 'fraud-detection') {
       return 'bottleneck';
     }
 
@@ -539,7 +555,10 @@ export class GraphCanvas {
 
       const g = document.createElementNS(SVG_NS, 'g');
       g.setAttribute('id', `node-${id}`);
-      g.setAttribute('class', `graph-node ${isPinned ? 'pinned' : ''}`);
+      let diagClass = '';
+      if (nodeStatus === 'cyclic') diagClass = 'cyclic-node';
+      else if (nodeStatus === 'bottleneck') diagClass = 'bottleneck-node';
+      g.setAttribute('class', `graph-node ${diagClass} ${isPinned ? 'pinned' : ''}`.trim());
       g.setAttribute('transform', `translate(${node.x}, ${node.y})`);
       g.setAttribute('cursor', 'grab');
       g.style.transition = 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
@@ -555,7 +574,7 @@ export class GraphCanvas {
         g.setAttribute('filter', 'url(#filter-pinned-glow)');
       }
 
-      // ── Card background rectangle (glassmorphism) ────────────────
+      // ── Card background rectangle (dark obsidian) ────────────────
       const cardBg = document.createElementNS(SVG_NS, 'rect');
       cardBg.setAttribute('x', String(cardX));
       cardBg.setAttribute('y', String(cardY));
@@ -563,7 +582,7 @@ export class GraphCanvas {
       cardBg.setAttribute('height', String(cardH));
       cardBg.setAttribute('rx', '10');
       cardBg.setAttribute('ry', '10');
-      cardBg.setAttribute('fill', isPinned ? '#0E1927' : 'url(#grad-node-card)');
+      cardBg.setAttribute('fill', isPinned ? '#0E1927' : '#0d1117');
       cardBg.setAttribute('filter', 'url(#filter-node-shadow)');
       g.appendChild(cardBg);
 

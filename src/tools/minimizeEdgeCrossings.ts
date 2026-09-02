@@ -106,22 +106,22 @@ export interface BoundingBox {
 }
 
 export const ARCHITECTURAL_TIER_BOUNDS: Record<string, BoundingBox> = {
-  'api-gateway': { maxX: 180, minY: 200, maxY: 400 },
-  'auth-service': { maxX: 300, minY: 50, maxY: 240 },
-  'user-service': { maxX: 320, minY: 360, maxY: 560 },
-  'catalog-service': { maxX: 320, minY: 200, maxY: 380 },
-  'pricing-service': { minX: 300, maxX: 480, minY: 80, maxY: 260 },
-  'order-service': { minX: 340, maxX: 500, minY: 220, maxY: 400 },
-  'inventory-service': { minX: 340, maxX: 500, minY: 360, maxY: 560 },
-  'payment-service': { minX: 500, maxX: 660, minY: 100, maxY: 260 },
-  'notification-service': { minX: 420, maxX: 600, minY: 20, maxY: 160 },
-  'fraud-detection': { minX: 500, maxX: 660, minY: 240, maxY: 400 },
-  'shipping-service': { minX: 660, maxX: 820, minY: 240, maxY: 400 },
-  'billing-service': { minX: 660, maxX: 820, minY: 100, maxY: 260 },
-  'analytics-service': { minX: 660, maxX: 820, minY: 360, maxY: 560 },
+  'api-gateway': { maxX: 120, minY: 200, maxY: 600 },
+  'auth-service': { minX: 180, maxX: 300, minY: 100, maxY: 300 },
+  'catalog-service': { minX: 220, maxX: 340, minY: 300, maxY: 480 },
+  'user-service': { minX: 220, maxX: 340, minY: 480, maxY: 680 },
+  'pricing-service': { minX: 340, maxX: 500, minY: 80, maxY: 260 },
+  'order-service': { minX: 380, maxX: 540, minY: 260, maxY: 460 },
+  'inventory-service': { minX: 380, maxX: 540, minY: 440, maxY: 640 },
+  'payment-service': { minX: 540, maxX: 700, minY: 120, maxY: 300 },
+  'notification-service': { minX: 440, maxX: 620, minY: 20, maxY: 160 },
+  'fraud-detection': { minX: 540, maxX: 700, minY: 280, maxY: 460 },
+  'shipping-service': { minX: 700, maxX: 880, minY: 280, maxY: 460 },
+  'billing-service': { minX: 700, maxX: 880, minY: 120, maxY: 300 },
+  'analytics-service': { minX: 700, maxX: 880, minY: 440, maxY: 640 },
   'email-worker': { minY: 0, maxY: 120 },
   'sms-worker': { minY: 0, maxY: 120 },
-  'audit-logger': { minX: 800 },
+  'audit-logger': { minX: 850 },
 };
 
 /**

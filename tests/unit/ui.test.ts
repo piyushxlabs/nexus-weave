@@ -7,6 +7,7 @@ import { GraphCanvas } from '../../src/ui/canvas.js';
 import { activityBus } from '../../src/ui/activityBus.js';
 import { createInitialState, type ProposedMutation } from '../../src/state/schema.js';
 import { createSeedGraph } from '../../src/state/seedGraph.js';
+import { dispatchToolCall, initDefaultHandlers } from '../../src/tools/dispatch.js';
 
 // ============================================================================
 // Lightweight Mock DOM for Unit Tests in Node Environment
@@ -41,6 +42,7 @@ class MockElement {
   }
   set innerHTML(html: string) {
     this._innerHTML = html;
+    this.children = [];
     // Parse simple IDs and text from innerHTML if injected
     const idMatches = html.matchAll(/id=["']([^"']+)["']/g);
     for (const match of idMatches) {
@@ -98,7 +100,26 @@ class MockElement {
   }
 
   querySelectorAll(selector: string): MockElement[] {
-    return [...this.children];
+    const results: MockElement[] = [];
+    const traverse = (el: MockElement) => {
+      for (const child of el.children) {
+        if (selector.startsWith('.')) {
+          const cls = selector.slice(1);
+          if (child.className.split(/\s+/).includes(cls)) {
+            results.push(child);
+          }
+        } else if (selector.startsWith('#')) {
+          if (child.id === selector.slice(1)) {
+            results.push(child);
+          }
+        } else {
+          results.push(child);
+        }
+        traverse(child);
+      }
+    };
+    traverse(this);
+    return results;
   }
 
   private findChildById(id: string): MockElement | null {
@@ -338,7 +359,7 @@ describe('Step 16: UI Components & Affordances', () => {
         },
       });
 
-      expect(svg.getAttribute('viewBox')).toContain('-22 -104');
+      expect(svg.getAttribute('viewBox')).toContain('-2 -39');
       // Children should include defs, edges-layer, ghost-layer, nodes-layer, status-pill-layer
       expect(svg.children.length).toBeGreaterThanOrEqual(5);
 
@@ -362,10 +383,10 @@ describe('Step 16: UI Components & Affordances', () => {
 
       // Initial auto-centered viewport state (scale: 1.15x)
       const initialViewport = canvas.getViewport();
-      expect(initialViewport.viewX).toBe(-22);
-      expect(initialViewport.viewY).toBe(-104);
+      expect(initialViewport.viewX).toBe(-2);
+      expect(initialViewport.viewY).toBe(-39);
       expect(initialViewport.scale).toBe(1.15);
-      expect(svg.getAttribute('viewBox')).toContain('-22 -104');
+      expect(svg.getAttribute('viewBox')).toContain('-2 -39');
 
       // Test wheel zoom in (negative deltaY)
       const mockWheelEventIn = {
@@ -398,10 +419,62 @@ describe('Step 16: UI Components & Affordances', () => {
       // Test resetViewport restores initial auto-centered coordinates
       canvas.resetViewport();
       const resetViewport = canvas.getViewport();
-      expect(resetViewport.viewX).toBe(-22);
-      expect(resetViewport.viewY).toBe(-104);
+      expect(resetViewport.viewX).toBe(-2);
+      expect(resetViewport.viewY).toBe(-39);
       expect(resetViewport.scale).toBe(1.15);
-      expect(svg.getAttribute('viewBox')).toContain('-22 -104');
+      expect(svg.getAttribute('viewBox')).toContain('-2 -39');
+
+      canvas.destroy();
+    });
+
+    it('guarantees zero yellow nodes on initial load and strict red vs amber separation after cycle scan', async () => {
+      const svg = new MockElement('SVG') as unknown as SVGSVGElement;
+      let state = createInitialState();
+      const seed = createSeedGraph();
+      state.graph_nodes = seed.nodes;
+      state.graph_edges = seed.edges;
+
+      const canvas = new GraphCanvas({
+        svgElement: svg,
+        getState: () => state,
+        setState: (s) => {
+          state = s;
+        },
+      });
+
+      // 1. Initial load verification: 0 cyclic nodes, 0 bottleneck nodes, 16 healthy nodes
+      const initialNodes = svg.querySelectorAll('.graph-node');
+      expect(initialNodes).toHaveLength(16);
+      const initialCyclic = svg.querySelectorAll('.cyclic-node');
+      const initialBottlenecks = svg.querySelectorAll('.bottleneck-node');
+      expect(initialCyclic).toHaveLength(0);
+      expect(initialBottlenecks).toHaveLength(0);
+
+      // 2. Execute detect_cycles_and_bottlenecks
+      initDefaultHandlers();
+      await dispatchToolCall('detect_cycles_and_bottlenecks', {}, {
+        getState: () => state,
+        setState: (s) => {
+          state = s;
+        },
+      });
+
+      // Re-render canvas
+      canvas.render();
+
+      // 3. Post-scan verification: exactly 3 red cyclic nodes, exactly 1 amber bottleneck node
+      const postCyclic = svg.querySelectorAll('.cyclic-node');
+      const postBottlenecks = svg.querySelectorAll('.bottleneck-node');
+      expect(postCyclic).toHaveLength(3);
+      expect(postBottlenecks).toHaveLength(1);
+
+      // Exactly order-service, payment-service, notification-service are cyclic
+      const cyclicIds = Array.from(postCyclic).map((el: any) => el.getAttribute('id')).sort();
+      expect(cyclicIds).toEqual(['node-notification-service', 'node-order-service', 'node-payment-service']);
+
+      // Exactly fraud-detection is bottleneck
+      const bottleneckIds = Array.from(postBottlenecks).map((el: any) => el.getAttribute('id'));
+      expect(bottleneckIds).toEqual(['node-fraud-detection']);
 
       canvas.destroy();
     });

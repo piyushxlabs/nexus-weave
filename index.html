@@ -369,12 +369,39 @@
         animation: neon-dash 1.2s linear infinite;
       }
 
-      /* Chaos Engineering cascading visuals */
+      /* Chaos Engineering cascading visuals — Heartbeat Pulse */
+      @keyframes heartbeat-pulse {
+        0% {
+          filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.4));
+        }
+        20% {
+          filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.85));
+        }
+        40% {
+          filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.5));
+        }
+        60% {
+          filter: drop-shadow(0 0 14px rgba(239, 68, 68, 0.8));
+        }
+        100% {
+          filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.4));
+        }
+      }
       .chaos-node-active {
-        filter: drop-shadow(0 0 16px rgba(239, 68, 68, 0.8)) !important;
+        animation: heartbeat-pulse 1.4s ease-in-out infinite !important;
+      }
+      .chaos-node-active rect {
+        stroke: #EF4444 !important;
+        stroke-width: 2.5px !important;
+        fill: #0d1117 !important;
       }
       .chaos-node-cascaded {
-        filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.6)) !important;
+        animation: heartbeat-pulse 1.8s ease-in-out infinite !important;
+      }
+      .chaos-node-cascaded rect {
+        stroke: #F97316 !important;
+        stroke-width: 2px !important;
+        fill: #0d1117 !important;
       }
 
       /* Floating Viewport Controls (Bottom-Left) */
