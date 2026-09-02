@@ -1,6 +1,7 @@
 /**
- * Cold-Judge Fallback & Onboarding Banner Component.
+ * Cold-Judge Fallback & Onboarding Banner Component — Premium Redesign.
  * Surfaces browser configuration instructions and video demo when WebMCP is absent.
+ * Uses frosted-glass aesthetic consistent with the enterprise header.
  * INTERFACE_OBSERVABILITY_SYSTEM.md Section 4a (unsupportedBanner.ts).
  */
 
@@ -27,25 +28,125 @@ export function renderUnsupportedBanner(
   banner.setAttribute('aria-live', 'polite');
 
   banner.innerHTML = `
-    <div class="banner-content" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 10px 16px; background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(99, 102, 241, 0.3); font-size: 13px; color: #e2e8f0;">
+    <div class="banner-content" style="
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 9px 20px;
+      background: rgba(11,15,25,0.94);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border-bottom: 1px solid rgba(99,102,241,0.2);
+      font-size: 12px;
+      color: #9CA3AF;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+    ">
+      <!-- Left: Status info -->
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-        <span class="status-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 9999px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; font-weight: 600; font-size: 11px;">
-          <span style="width: 6px; height: 6px; border-radius: 50%; background: #818cf8;"></span>
+        <!-- Status badge -->
+        <span class="status-badge" style="
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 3px 9px;
+          border-radius: 5px;
+          background: rgba(99,102,241,0.1);
+          border: 1px solid rgba(99,102,241,0.25);
+          color: #818CF8;
+          font-weight: 600;
+          font-size: 10.5px;
+          letter-spacing: 0.02em;
+          white-space: nowrap;
+        ">
+          <span style="
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #6366F1;
+            flex-shrink: 0;
+          "></span>
           WebMCP Environment: Inactive (Standard Browser)
         </span>
-        <span style="color: #cbd5e1;">
+
+        <!-- Instruction text -->
+        <span style="color: #6B7280; font-size: 11.5px; line-height: 1.4;">
           To interact with the autonomous agent live, open this URL in the ChatGPT in-app browser or launch Chrome with
-          <code style="background: rgba(15, 23, 42, 0.7); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #a5b4fc; border: 1px solid rgba(148, 163, 184, 0.2);">${flagUrl}</code>.
+          <code style="
+            background: rgba(9,13,22,0.8);
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+            color: #A5B4FC;
+            font-size: 10.5px;
+            border: 1px solid rgba(99,102,241,0.2);
+          ">${flagUrl}</code>.
         </span>
       </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <button id="copy-flag-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 6px; background: #4f46e5; color: #ffffff; border: none; font-size: 12px; font-weight: 500; cursor: pointer; transition: background 0.2s;" aria-label="Copy Chrome Testing Flag">
-          <span>Copy Chrome Testing Flag</span>
+
+      <!-- Right: CTAs -->
+      <div style="display: flex; align-items: center; gap: 7px; flex-shrink: 0;">
+        <button id="copy-flag-btn" style="
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 5px 13px;
+          border-radius: 6px;
+          background: #4F46E5;
+          color: #FFFFFF;
+          border: none;
+          font-size: 11.5px;
+          font-weight: 500;
+          font-family: inherit;
+          cursor: pointer;
+          transition: background 0.15s, box-shadow 0.15s;
+          white-space: nowrap;
+          box-shadow: 0 0 0 0 rgba(79,70,229,0);
+        "
+        onmouseover="this.style.background='#4338CA'; this.style.boxShadow='0 0 12px rgba(99,102,241,0.4)'"
+        onmouseout="this.style.background='#4F46E5'; this.style.boxShadow='none'"
+        aria-label="Copy Chrome Testing Flag">
+          Copy Chrome Testing Flag
         </button>
-        <button id="watch-demo-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 6px; background: rgba(51, 65, 85, 0.8); color: #f1f5f9; border: 1px solid rgba(148, 163, 184, 0.2); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;" aria-label="Watch 2-Min Live Demo Video">
-          <span>Watch 2-Min Live Demo Video</span>
+
+        <button id="watch-demo-btn" style="
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 5px 13px;
+          border-radius: 6px;
+          background: rgba(255,255,255,0.05);
+          color: #CBD5E1;
+          border: 1px solid rgba(255,255,255,0.1);
+          font-size: 11.5px;
+          font-weight: 500;
+          font-family: inherit;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='rgba(255,255,255,0.18)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.1)'"
+        aria-label="Watch 2-Min Live Demo Video">
+          Watch 2-Min Live Demo Video
         </button>
-        <button id="dismiss-banner-btn" style="background: transparent; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 4px 8px; line-height: 1;" aria-label="Dismiss banner">&times;</button>
+
+        <button id="dismiss-banner-btn" style="
+          background: transparent;
+          border: none;
+          color: #374151;
+          font-size: 16px;
+          cursor: pointer;
+          padding: 4px 6px;
+          line-height: 1;
+          border-radius: 4px;
+          transition: color 0.15s;
+          flex-shrink: 0;
+        "
+        onmouseover="this.style.color='#9CA3AF'"
+        onmouseout="this.style.color='#374151'"
+        aria-label="Dismiss banner">&times;</button>
       </div>
     </div>
   `;
@@ -59,10 +160,10 @@ export function renderUnsupportedBanner(
           await navigator.clipboard.writeText(flagUrl);
         }
         copyBtn.textContent = 'Copied to Clipboard!';
-        copyBtn.style.background = '#10b981';
+        copyBtn.style.background = '#10B981';
         setTimeout(() => {
           copyBtn.textContent = 'Copy Chrome Testing Flag';
-          copyBtn.style.background = '#4f46e5';
+          copyBtn.style.background = '#4F46E5';
         }, 2000);
       } catch {
         copyBtn.textContent = 'Flag: ' + flagUrl;
@@ -104,22 +205,117 @@ export function openDemoModal(): HTMLElement {
   modal.setAttribute('aria-modal', 'true');
   modal.setAttribute('aria-label', 'Nexus Weave WebMCP Demo');
   modal.style.cssText =
-    'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 100;';
+    'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(9,13,22,0.88); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; z-index: 100;';
 
   modal.innerHTML = `
-    <div style="background: #1e293b; border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 12px; width: 90%; max-width: 640px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); color: #f8fafc;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h2 style="font-size: 18px; font-weight: 600; color: #e2e8f0;">Nexus Weave — 2-Minute WebMCP Walkthrough</h2>
-        <button id="close-modal-btn" style="background: transparent; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">&times;</button>
+    <div style="
+      background: #0F1724;
+      border: 1px solid rgba(99,102,241,0.25);
+      border-radius: 14px;
+      width: 90%;
+      max-width: 600px;
+      padding: 28px;
+      box-shadow:
+        0 40px 80px -12px rgba(0,0,0,0.7),
+        0 0 0 0.5px rgba(255,255,255,0.04) inset;
+      color: #F3F4F6;
+    ">
+      <!-- Modal header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+        <div>
+          <h2 style="
+            font-size: 16px;
+            font-weight: 700;
+            color: #F3F4F6;
+            letter-spacing: -0.01em;
+            margin-bottom: 4px;
+          ">Nexus Weave — 2-Minute WebMCP Walkthrough</h2>
+          <p style="font-size: 11.5px; color: #6B7280;">
+            Browser-native dependency graph untangler · Zero-egress · Semi-autonomous
+          </p>
+        </div>
+        <button id="close-modal-btn" style="
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.08);
+          color: #9CA3AF;
+          font-size: 16px;
+          cursor: pointer;
+          width: 28px;
+          height: 28px;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+          transition: background 0.15s;
+        "
+        onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.05)'"
+        >&times;</button>
       </div>
-      <div style="background: #0f172a; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 20px; border: 1px dashed rgba(148, 163, 184, 0.3);">
-        <div style="font-size: 36px; margin-bottom: 8px;">🕸️ ➔ ⚡ ➔ ✨</div>
-        <p style="font-size: 14px; color: #94a3b8; line-height: 1.6;">
-          Nexus Weave turns the active browser tab into a high-performance WebMCP graph server. External AI agents query topology, identify cyclic deadlocks, compute critical paths, and untangle tangled layout regions in real time without sending data outside this tab.
+
+      <!-- Demo content -->
+      <div style="
+        background: rgba(9,13,22,0.7);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 10px;
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 24px;
+      ">
+        <div style="font-size: 32px; margin-bottom: 12px; letter-spacing: 0.1em;">🕸️ ➔ ⚡ ➔ ✨</div>
+        <p style="font-size: 13px; color: #6B7280; line-height: 1.7; max-width: 440px; margin: 0 auto;">
+          Nexus Weave turns the active browser tab into a high-performance WebMCP graph server.
+          External AI agents query topology, identify cyclic deadlocks, compute critical paths,
+          and untangle tangled layout regions in real time —
+          <strong style="color: #9CA3AF;">without sending data outside this tab.</strong>
         </p>
       </div>
+
+      <!-- Capability grid -->
+      <div style="
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 24px;
+      ">
+        ${[
+          { icon: '⬡', title: 'get_graph_topology', desc: 'Read all nodes, edges & positions' },
+          { icon: '⟳', title: 'detect_cycles', desc: 'DFS cycle detection + bottlenecks' },
+          { icon: '→', title: 'compute_critical_path', desc: 'Longest-path over DAG' },
+          { icon: '⊹', title: 'minimize_crossings', desc: 'Barycenter layout with approval gate' },
+        ].map(({ icon, title, desc }) => `
+          <div style="
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 12px;
+          ">
+            <div style="font-size: 18px; margin-bottom: 6px;">${icon}</div>
+            <div style="font-size: 10.5px; font-weight: 600; color: #A5B4FC; margin-bottom: 3px; font-family: 'SF Mono', monospace;">${title}</div>
+            <div style="font-size: 10.5px; color: #4B5563;">${desc}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- Actions -->
       <div style="display: flex; justify-content: flex-end; gap: 10px;">
-        <button id="modal-ok-btn" style="padding: 8px 16px; background: #4f46e5; color: #ffffff; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;">Got It</button>
+        <button id="modal-ok-btn" style="
+          padding: 9px 20px;
+          background: #4F46E5;
+          color: #FFFFFF;
+          border: none;
+          border-radius: 7px;
+          font-size: 12.5px;
+          font-weight: 600;
+          font-family: inherit;
+          cursor: pointer;
+          transition: background 0.15s;
+          letter-spacing: 0.01em;
+        "
+        onmouseover="this.style.background='#4338CA'"
+        onmouseout="this.style.background='#4F46E5'"
+        >Got It — Let's Untangle</button>
       </div>
     </div>
   `;

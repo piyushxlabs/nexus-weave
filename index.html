@@ -3,55 +3,361 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- SEO -->
+    <meta name="description" content="Nexus Weave — Browser-native WebMCP dependency graph untangler. Zero-egress AI tool server for microservice architecture visualization." />
     <!-- WebMCP Official Origin Trial Token for production Chromium runtimes -->
     <meta http-equiv="origin-trial" content="AkNexusWeaveWebMCPOfficialTrialToken2026==" />
     <title>Nexus Weave — WebMCP Dependency Graph Untangler</title>
     <style>
-      * {
+      /* ─── Reset & Base ────────────────────────────────────────────────── */
+      *, *::before, *::after {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
       }
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-        background-color: #0f172a;
-        color: #f8fafc;
+
+      :root {
+        --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        --font-mono: "SF Mono", "Fira Code", "Cascadia Code", Consolas, "Courier New", monospace;
+
+        /* Obsidian Palette */
+        --bg-base:      #090D16;
+        --bg-surface:   #0B0F19;
+        --bg-elevated:  #111827;
+        --bg-hover:     #1A2235;
+        --border-subtle: rgba(255, 255, 255, 0.07);
+        --border-muted:  rgba(255, 255, 255, 0.12);
+        --border-accent: rgba(255, 255, 255, 0.18);
+
+        /* Text */
+        --text-primary:   #F3F4F6;
+        --text-secondary: #9CA3AF;
+        --text-muted:     #6B7280;
+        --text-dim:       #4B5563;
+
+        /* Brand / Accent */
+        --accent-indigo:  #6366F1;
+        --accent-cyan:    #06B6D4;
+        --accent-emerald: #10B981;
+        --accent-amber:   #F59E0B;
+        --accent-rose:    #F43F5E;
+
+        /* HUD pill backgrounds */
+        --pill-indigo-bg: rgba(99, 102, 241, 0.15);
+        --pill-indigo-border: rgba(99, 102, 241, 0.35);
+        --pill-slate-bg: rgba(100, 116, 139, 0.15);
+        --pill-slate-border: rgba(100, 116, 139, 0.3);
+        --pill-red-bg: rgba(244, 63, 94, 0.15);
+        --pill-red-border: rgba(244, 63, 94, 0.4);
+        --pill-amber-bg: rgba(245, 158, 11, 0.12);
+        --pill-amber-border: rgba(245, 158, 11, 0.35);
+
+        --header-height: 56px;
+      }
+
+      html, body {
+        height: 100%;
+        width: 100%;
         overflow: hidden;
-        height: 100vh;
-        width: 100vw;
+      }
+
+      body {
+        font-family: var(--font-sans);
+        background-color: var(--bg-base);
+        color: var(--text-primary);
         display: flex;
         flex-direction: column;
+        height: 100vh;
+        width: 100vw;
       }
+
+      /* ─── App Shell ───────────────────────────────────────────────────── */
+      #app-shell {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
+
+      /* ─── Header / Frosted-Glass Navbar ──────────────────────────────── */
+      #app-header {
+        position: relative;
+        z-index: 60;
+        height: var(--header-height);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        background: rgba(9, 13, 22, 0.92);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-bottom: 1px solid var(--border-muted);
+        flex-shrink: 0;
+        gap: 12px;
+      }
+
+      /* Left: Brand */
+      .header-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+      }
+
+      .brand-logo-icon {
+        width: 28px;
+        height: 28px;
+        background: linear-gradient(135deg, #6366F1 0%, #06B6D4 100%);
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+        flex-shrink: 0;
+      }
+
+      .brand-name {
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-primary);
+      }
+
+      .brand-badge {
+        padding: 2px 7px;
+        border-radius: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        background: rgba(6, 182, 212, 0.15);
+        color: #67E8F9;
+        border: 1px solid rgba(6, 182, 212, 0.3);
+      }
+
+      /* Center: Stats HUD */
+      .header-hud {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex: 1;
+        justify-content: center;
+        flex-wrap: nowrap;
+        overflow: hidden;
+      }
+
+      .hud-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        white-space: nowrap;
+        letter-spacing: 0.01em;
+        transition: opacity 0.2s;
+      }
+
+      .hud-pill-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+
+      .hud-pill.indigo {
+        background: var(--pill-indigo-bg);
+        border: 1px solid var(--pill-indigo-border);
+        color: #A5B4FC;
+      }
+      .hud-pill.indigo .hud-pill-dot { background: #818CF8; }
+
+      .hud-pill.slate {
+        background: var(--pill-slate-bg);
+        border: 1px solid var(--pill-slate-border);
+        color: #94A3B8;
+      }
+      .hud-pill.slate .hud-pill-dot { background: #64748B; }
+
+      .hud-pill.danger {
+        background: var(--pill-red-bg);
+        border: 1px solid var(--pill-red-border);
+        color: #FB7185;
+      }
+      .hud-pill.danger .hud-pill-dot {
+        background: #F43F5E;
+        animation: pulse-dot 1.8s ease-in-out infinite;
+      }
+
+      .hud-pill.warning {
+        background: var(--pill-amber-bg);
+        border: 1px solid var(--pill-amber-border);
+        color: #FCD34D;
+      }
+      .hud-pill.warning .hud-pill-dot { background: #F59E0B; }
+
+      @keyframes pulse-dot {
+        0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.5); }
+        50% { opacity: 0.7; box-shadow: 0 0 0 3px rgba(244, 63, 94, 0); }
+      }
+
+      /* Right: WebMCP Status */
+      .header-status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+
+      .webmcp-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 500;
+        background: rgba(17, 24, 39, 0.8);
+        border: 1px solid var(--border-muted);
+        color: var(--text-secondary);
+        cursor: default;
+        user-select: none;
+      }
+
+      .webmcp-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #F59E0B;
+      }
+
+      /* ─── Banner Root (sits below header) ────────────────────────────── */
       #banner-root {
         position: relative;
         z-index: 50;
+        flex-shrink: 0;
       }
+
+      /* ─── Canvas Container ────────────────────────────────────────────── */
       #canvas-container {
         flex: 1;
         position: relative;
         width: 100%;
         height: 100%;
         overflow: hidden;
+        /* Ambient radial glow behind the graph center */
+        background:
+          radial-gradient(ellipse 60% 40% at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 70%),
+          radial-gradient(ellipse 80% 60% at 50% 50%, rgba(99, 102, 241, 0.04) 0%, transparent 80%),
+          var(--bg-base);
       }
+
       #graph-canvas {
         width: 100%;
         height: 100%;
         display: block;
       }
+
+      /* ─── Activity Panel Root ─────────────────────────────────────────── */
       #activity-panel-root {
         position: absolute;
-        bottom: 16px;
-        right: 16px;
+        bottom: 20px;
+        right: 20px;
         z-index: 40;
+      }
+
+      /* ─── Global Scrollbar Styling ───────────────────────────────────── */
+      ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* ─── SVG Animations ─────────────────────────────────────────────── */
+      @keyframes neon-dash {
+        to { stroke-dashoffset: -20; }
+      }
+
+      @keyframes glow-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+      }
+
+      /* Canvas SVG node transitions */
+      .graph-node {
+        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .cyclic-edge {
+        animation: neon-dash 1.2s linear infinite;
       }
     </style>
   </head>
   <body>
-    <div id="banner-root"></div>
-    <main id="canvas-container">
-      <svg id="graph-canvas"></svg>
-    </main>
-    <aside id="activity-panel-root"></aside>
+    <div id="app-shell">
+
+      <!-- ── Frosted-Glass Header ─────────────────────────────────────── -->
+      <header id="app-header" aria-label="Nexus Weave application header">
+        <!-- Left: Brand Identity -->
+        <div class="header-brand">
+          <div class="brand-logo-icon" aria-hidden="true">⬡</div>
+          <span class="brand-name">Nexus Weave</span>
+          <span class="brand-badge">WebMCP Native</span>
+        </div>
+
+        <!-- Center: Live Stats HUD -->
+        <nav class="header-hud" aria-label="Live graph statistics" id="graph-stats-hud">
+          <div class="hud-pill indigo" id="hud-nodes" title="Total microservice nodes in graph">
+            <span class="hud-pill-dot" aria-hidden="true"></span>
+            <span id="hud-nodes-label">Nodes: —</span>
+          </div>
+          <div class="hud-pill slate" id="hud-edges" title="Total dependency edges">
+            <span class="hud-pill-dot" aria-hidden="true"></span>
+            <span id="hud-edges-label">Dependencies: —</span>
+          </div>
+          <div class="hud-pill danger" id="hud-cycles" title="Active circular dependency loops detected">
+            <span class="hud-pill-dot" aria-hidden="true"></span>
+            <span id="hud-cycles-label">Cycles: —</span>
+          </div>
+          <div class="hud-pill warning" id="hud-layout" title="Current layout crossing state">
+            <span class="hud-pill-dot" aria-hidden="true"></span>
+            <span id="hud-layout-label">Layout: Ready</span>
+          </div>
+        </nav>
+
+        <!-- Right: WebMCP Status -->
+        <div class="header-status">
+          <div class="webmcp-status-pill" id="webmcp-header-status" aria-label="WebMCP environment status">
+            <span class="webmcp-status-dot" aria-hidden="true"></span>
+            <span id="webmcp-status-text">Simulation Mode</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- ── Banner Mount (proposal / onboarding) ─────────────────────── -->
+      <div id="banner-root"></div>
+
+      <!-- ── Graph Canvas ──────────────────────────────────────────────── -->
+      <main id="canvas-container" aria-label="Dependency graph visualization canvas">
+        <svg id="graph-canvas" role="img" aria-label="Microservice dependency graph"></svg>
+      </main>
+
+      <!-- ── Activity Panel ────────────────────────────────────────────── -->
+      <aside id="activity-panel-root" aria-label="Activity and telemetry log"></aside>
+
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

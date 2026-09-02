@@ -344,5 +344,66 @@ describe('Step 16: UI Components & Affordances', () => {
 
       canvas.destroy();
     });
+
+    it('supports canvas panning, wheel zooming, and viewport reset', () => {
+      const svg = new MockElement('SVG') as unknown as SVGSVGElement;
+      let state = createInitialState();
+      const seed = createSeedGraph();
+      state.graph_nodes = seed.nodes;
+      state.graph_edges = seed.edges;
+
+      const canvas = new GraphCanvas({
+        svgElement: svg,
+        getState: () => state,
+        setState: (s) => {
+          state = s;
+        },
+      });
+
+      // Initial viewport state
+      const initialViewport = canvas.getViewport();
+      expect(initialViewport.viewX).toBe(0);
+      expect(initialViewport.viewY).toBe(0);
+      expect(initialViewport.scale).toBe(1.0);
+      expect(svg.getAttribute('viewBox')).toBe('0 0 1200 800');
+
+      // Test wheel zoom in (negative deltaY)
+      const mockWheelEventIn = {
+        type: 'wheel',
+        deltaY: -100,
+        clientX: 600,
+        clientY: 400,
+        preventDefault: () => {},
+      };
+      (svg as any).dispatchEvent(mockWheelEventIn);
+
+      const zoomedViewport = canvas.getViewport();
+      expect(zoomedViewport.scale).toBeGreaterThan(1.0);
+      expect(zoomedViewport.scale).toBeLessThanOrEqual(2.0);
+
+      // Test wheel zoom out (positive deltaY)
+      const mockWheelEventOut = {
+        type: 'wheel',
+        deltaY: 500,
+        clientX: 600,
+        clientY: 400,
+        preventDefault: () => {},
+      };
+      (svg as any).dispatchEvent(mockWheelEventOut);
+
+      const zoomedOutViewport = canvas.getViewport();
+      expect(zoomedOutViewport.scale).toBeLessThan(zoomedViewport.scale);
+      expect(zoomedOutViewport.scale).toBeGreaterThanOrEqual(0.5);
+
+      // Test resetViewport restores initial coordinates
+      canvas.resetViewport();
+      const resetViewport = canvas.getViewport();
+      expect(resetViewport.viewX).toBe(0);
+      expect(resetViewport.viewY).toBe(0);
+      expect(resetViewport.scale).toBe(1.0);
+      expect(svg.getAttribute('viewBox')).toBe('0 0 1200 800');
+
+      canvas.destroy();
+    });
   });
 });

@@ -120,4 +120,31 @@ test.describe('Nexus Weave — End-to-End Application & WebMCP Suites', () => {
     expect(updatedTransform).toBeTruthy();
     expect(updatedTransform).not.toBe(initialTransform);
   });
+
+  test('6. Canvas Viewport Navigation: Background Panning and Wheel Zooming Update ViewBox', async ({ page }) => {
+    const canvas = page.locator('#graph-canvas');
+    await expect(canvas).toBeVisible();
+
+    const initialViewBox = await canvas.getAttribute('viewBox');
+    expect(initialViewBox).toBe('0 0 1200 800');
+
+    // Pan canvas by dragging on empty background area
+    await page.mouse.move(200, 150);
+    await page.mouse.down();
+    await page.mouse.move(250, 200, { steps: 5 });
+    await page.mouse.up();
+
+    const pannedViewBox = await canvas.getAttribute('viewBox');
+    expect(pannedViewBox).toBeTruthy();
+    expect(pannedViewBox).not.toBe(initialViewBox);
+
+    // Zoom canvas using mouse wheel (zoom in)
+    await page.mouse.move(300, 300);
+    await page.mouse.wheel(0, -200);
+    await page.waitForTimeout(100);
+
+    const zoomedViewBox = await canvas.getAttribute('viewBox');
+    expect(zoomedViewBox).toBeTruthy();
+    expect(zoomedViewBox).not.toBe(pannedViewBox);
+  });
 });

@@ -1,6 +1,7 @@
 /**
- * Proposal Review Banner Component.
+ * Proposal Review Banner Component — Premium Redesign.
  * Surfaces Human-in-the-Loop approval gate for large or ambiguous mutations.
+ * Premium amber/gold warning aesthetic with glassmorphism backdrop.
  * INTERFACE_OBSERVABILITY_SYSTEM.md Section 5.
  */
 
@@ -40,28 +41,100 @@ export function renderProposalBanner(
     'Threshold exceeded (> 35% of graph) — Human-in-the-Loop review mandated.';
 
   banner.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 12px 20px; background: rgba(245, 158, 11, 0.12); border-bottom: 2px solid #f59e0b; backdrop-filter: blur(8px); color: #fef3c7; font-size: 13px;">
+    <div style="
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 10px 20px;
+      background: rgba(9,13,22,0.94);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border-bottom: 1px solid rgba(245,158,11,0.25);
+      color: #E2E8F0;
+      font-size: 12px;
+      box-shadow: 0 1px 0 rgba(245,158,11,0.08) inset;
+    ">
+      <!-- Left: Badge + info -->
       <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-        <span style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 9999px; background: rgba(245, 158, 11, 0.25); border: 1px solid #f59e0b; color: #fbbf24; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">
+        <span style="
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 3px 9px;
+          border-radius: 5px;
+          background: rgba(245,158,11,0.15);
+          border: 1px solid rgba(245,158,11,0.3);
+          color: #FCD34D;
+          font-weight: 700;
+          font-size: 10px;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          white-space: nowrap;
+          flex-shrink: 0;
+        ">
+          <span style="width:5px;height:5px;border-radius:50%;background:#F59E0B;animation:pulse-dot 1.5s ease-in-out infinite;" aria-hidden="true"></span>
           Approval Required
         </span>
+
         <div>
-          <strong style="color: #ffffff; font-weight: 600;">Proposed Layout Untangling:</strong>
-          <span style="color: #fde68a; margin-left: 6px;">
-            Untangle region of <strong>${nodeCount} nodes</strong> (Edge crossings: 
-            <span style="color: #f87171; text-decoration: line-through;">${beforeCrossings}</span> ➔ 
-            <span style="color: #34d399; font-weight: 700;">${afterCrossings}</span>).
+          <span style="color: #D1D5DB; font-weight: 600; font-size: 12px;">Proposed Layout Untangling:</span>
+          <span style="color: #9CA3AF; margin-left: 6px; font-size: 11.5px;">
+            Untangle region of <strong style="color:#E2E8F0;">${nodeCount} nodes</strong>
+            (Edge crossings:
+            <span style="color: #F87171; text-decoration: line-through;">${beforeCrossings}</span>
+            ➔
+            <span style="color: #34D399; font-weight: 700;">${afterCrossings}</span>).
           </span>
-          <span style="display: block; font-size: 11px; color: #d97706; margin-top: 2px;">
-            ${reasonText}
-          </span>
+          <span style="display: block; font-size: 10.5px; color: #6B7280; margin-top: 2px;">${reasonText}</span>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <button id="proposal-approve-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; background: #10b981; color: #ffffff; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s;" aria-label="Approve & Apply Layout Mutation">
-          ✓ Approve & Apply
+
+      <!-- Right: Action buttons -->
+      <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+        <button id="proposal-approve-btn" style="
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 6px 16px;
+          border-radius: 6px;
+          background: #10B981;
+          color: #FFFFFF;
+          border: none;
+          font-size: 11.5px;
+          font-weight: 600;
+          font-family: inherit;
+          cursor: pointer;
+          transition: background 0.15s, box-shadow 0.15s;
+          white-space: nowrap;
+          letter-spacing: 0.01em;
+        "
+        onmouseover="this.style.background='#059669'; this.style.boxShadow='0 0 12px rgba(16,185,129,0.35)'"
+        onmouseout="this.style.background='#10B981'; this.style.boxShadow='none'"
+        aria-label="Approve &amp; Apply Layout Mutation">
+          ✓ Approve &amp; Apply
         </button>
-        <button id="proposal-discard-btn" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 6px; background: rgba(71, 85, 105, 0.7); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;" aria-label="Discard Layout Proposal">
+
+        <button id="proposal-discard-btn" style="
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 6px 14px;
+          border-radius: 6px;
+          background: rgba(255,255,255,0.04);
+          color: #9CA3AF;
+          border: 1px solid rgba(255,255,255,0.1);
+          font-size: 11.5px;
+          font-weight: 500;
+          font-family: inherit;
+          cursor: pointer;
+          transition: background 0.15s, border-color 0.15s;
+          white-space: nowrap;
+        "
+        onmouseover="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='rgba(255,255,255,0.18)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.04)'; this.style.borderColor='rgba(255,255,255,0.1)'"
+        aria-label="Discard Layout Proposal">
           ✕ Discard
         </button>
       </div>
@@ -73,12 +146,14 @@ export function renderProposalBanner(
     approveBtn.addEventListener('click', async () => {
       approveBtn.disabled = true;
       approveBtn.textContent = 'Applying…';
+      approveBtn.style.opacity = '0.7';
       try {
         await onApprove(proposal);
         banner.remove();
       } catch {
         approveBtn.disabled = false;
         approveBtn.textContent = 'Failed — Try Again';
+        approveBtn.style.opacity = '1';
       }
     });
   }

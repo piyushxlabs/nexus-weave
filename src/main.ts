@@ -65,6 +65,22 @@ export function bootstrapNexusWeave(): NexusWeaveApp | null {
     setState: stateAccessor.setState,
   });
 
+  // Update header HUD with initial seed graph stats
+  const initNodes = Object.keys(state.graph_nodes).length;
+  const initEdges = Object.keys(state.graph_edges).length;
+  const nodesLabel = document.getElementById('hud-nodes-label');
+  const edgesLabel = document.getElementById('hud-edges-label');
+  const cyclesLabel = document.getElementById('hud-cycles-label');
+  if (nodesLabel) nodesLabel.textContent = `Nodes: ${initNodes}`;
+  if (edgesLabel) edgesLabel.textContent = `Dependencies: ${initEdges}`;
+  if (cyclesLabel) cyclesLabel.textContent = 'Cycles: Scan pending';
+
+  // Update WebMCP status indicator in header
+  const webmcpText = document.getElementById('webmcp-status-text');
+  const webmcpDot = document.querySelector('.webmcp-status-dot') as HTMLElement | null;
+  if (webmcpText) webmcpText.textContent = webmcpAvailable ? 'WebMCP Active' : 'Simulation Mode';
+  if (webmcpDot) webmcpDot.style.background = webmcpAvailable ? '#10B981' : '#F59E0B';
+
   // 3. Mount In-Page Activity & Telemetry Panel
   const activityPanel = new ActivityPanel(activityPanelRoot);
 
