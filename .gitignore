@@ -2,22 +2,29 @@
 node_modules/
 .pnpm-store/
 
-# Production Build output
+# Production Build & Compilation outputs
 dist/
+out/
 build/
+
+# Test Artifacts & Coverage
 test-results/
 playwright-report/
+coverage/
+*.lcov
 
-# AI Agent internal rules, prompts & scratchpad logs (Do NOT upload to GitHub)
+# AI Agent internal rules, prompts & scratchpad logs
 .agents/
+.cursor/
 progress_log.md
 project_state.md
 TECHNICAL_NOTES.md
 do_after_completion.md
 implementation_plan.md
+walkthrough.md
 
+# Internal documentation specs
 docs/
-
 
 # IDE & Editor settings
 .vscode/
@@ -37,3 +44,5 @@ Thumbs.db
 *.log
 npm-debug.log*
 pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
