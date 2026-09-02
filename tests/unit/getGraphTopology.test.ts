@@ -34,8 +34,8 @@ describe('Node 1: get_graph_topology Tool Handler', () => {
     const apiGateway = result.nodes.find((n) => n.id === 'api-gateway');
     expect(apiGateway).toBeDefined();
     expect(apiGateway?.label).toBe('API Gateway');
-    expect(apiGateway?.x).toBe(90);
-    expect(apiGateway?.y).toBe(460);
+    expect(apiGateway?.x).toBe(70);
+    expect(apiGateway?.y).toBe(470);
     expect(apiGateway?.duration).toBe(15);
   });
 

@@ -106,7 +106,7 @@ export interface BoundingBox {
 }
 
 export const ARCHITECTURAL_TIER_BOUNDS: Record<string, BoundingBox> = {
-  'api-gateway': { maxX: 120, minY: 380, maxY: 540 },
+  'api-gateway': { maxX: 100, minY: 380, maxY: 540 },
   'auth-service': { minX: 180, maxX: 300, minY: 100, maxY: 480 },
   'catalog-service': { minX: 220, maxX: 340, minY: 100, maxY: 480 },
   'user-service': { minX: 220, maxX: 340, minY: 480, maxY: 680 },
@@ -119,8 +119,8 @@ export const ARCHITECTURAL_TIER_BOUNDS: Record<string, BoundingBox> = {
   'shipping-service': { minX: 700, maxX: 880, minY: 120, maxY: 460 },
   'billing-service': { minX: 700, maxX: 880, minY: 120, maxY: 460 },
   'analytics-service': { minX: 700, maxX: 880, minY: 440, maxY: 640 },
-  'email-worker': { minY: 0, maxY: 120 },
-  'sms-worker': { minY: 0, maxY: 120 },
+  'email-worker': { minY: -20, maxY: 120 },
+  'sms-worker': { minY: -20, maxY: 120 },
   'audit-logger': { minX: 850 },
 };
 
