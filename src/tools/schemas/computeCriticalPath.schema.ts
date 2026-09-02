@@ -12,6 +12,7 @@ export interface ComputeCriticalPathInput {
 }
 
 export interface ComputeCriticalPathResult {
+  [key: string]: unknown;
   critical_path_node_ids: string[];
   total_duration: number;
 }
