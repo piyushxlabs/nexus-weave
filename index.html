@@ -105,15 +105,11 @@
         flex-shrink: 0;
       }
 
-      .brand-logo-icon {
-        width: 28px;
-        height: 28px;
-        background: linear-gradient(135deg, #6366F1 0%, #06B6D4 100%);
+      .brand-logo-img {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
         border-radius: 7px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
         box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
         flex-shrink: 0;
       }
@@ -501,7 +497,7 @@
       <header id="app-header" aria-label="Nexus Weave application header">
         <!-- Left: Brand Identity -->
         <div class="header-brand">
-          <div class="brand-logo-icon" aria-hidden="true">⬡</div>
+          <img src="/assets/logo.png" alt="Nexus Weave Logo" class="brand-logo-img" />
           <span class="brand-name">Nexus Weave</span>
           <span class="brand-badge">WebMCP Native</span>
         </div>
