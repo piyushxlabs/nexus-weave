@@ -33,8 +33,14 @@ export function renderProposalBanner(
   banner.setAttribute('role', 'alert');
   banner.setAttribute('aria-live', 'polite');
 
-  const beforeCrossings = proposal.initial_crossings ?? 0;
-  const afterCrossings = proposal.candidate_crossings ?? 0;
+  const beforeCrossings =
+    proposal.initial_crossings ??
+    (proposal as any).crossings_before ??
+    0;
+  const afterCrossings =
+    proposal.candidate_crossings ??
+    (proposal as any).crossings_after ??
+    0;
   const nodeCount = proposal.region_node_ids.length;
   const reasonText =
     (proposal as any).reason ||
@@ -187,8 +193,10 @@ export function setupProposalBannerListener(
       tool_name: 'minimize_edge_crossings',
       region_node_ids: detail.region_node_ids,
       candidate_positions: (detail.preview?.candidate_positions as Record<string, { x: number; y: number }>) || {},
-      candidate_crossings: (detail.preview?.candidate_crossings as number) ?? 0,
-      initial_crossings: (detail.preview?.initial_crossings as number) ?? 0,
+      candidate_crossings:
+        ((detail.preview?.candidate_crossings ?? detail.preview?.crossings_after) as number) ?? 0,
+      initial_crossings:
+        ((detail.preview?.initial_crossings ?? detail.preview?.crossings_before) as number) ?? 0,
       status: 'proposed',
     };
 

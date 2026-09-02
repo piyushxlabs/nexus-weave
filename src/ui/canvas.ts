@@ -10,6 +10,7 @@ import type { GraphAgentState, NodeRecord, EdgeRecord, ProposedMutation } from '
 import { reduceGraphNodes, reducePinnedNodeIds } from '../state/reducers.js';
 import { createPinBadgeElement } from './pinBadges.js';
 import { activityBus } from './activityBus.js';
+import { countCrossings } from '../tools/minimizeEdgeCrossings.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -351,27 +352,41 @@ export class GraphCanvas {
       if (cyclicCount > 0) {
         cyclesLabel.textContent = `Cycles: ${cyclicCount}`;
         badgeCycles.classList.add('danger');
-        badgeCycles.classList.remove('safe');
+        badgeCycles.classList.remove('safe', 'slate');
       } else if (edges.some((e) => e.is_cyclic !== null && e.is_cyclic !== undefined)) {
         // Scan was run and found no cycles
         cyclesLabel.textContent = 'Cycles: None';
-        badgeCycles.classList.remove('danger');
+        badgeCycles.classList.remove('danger', 'slate');
         badgeCycles.classList.add('safe');
       } else {
         // Never scanned
         cyclesLabel.textContent = 'Cycles: Scan ▶';
         badgeCycles.classList.remove('danger', 'safe');
+        badgeCycles.classList.add('slate');
       }
     }
 
     if (layoutLabel && badgeLayout && badgeLayout.getAttribute('aria-disabled') !== 'true') {
-      const crossings = this.activeProposal?.initial_crossings;
-      if (crossings !== undefined && crossings > 0) {
-        layoutLabel.textContent = `Tangled: ${crossings} crossings`;
+      const activeCrossings = this.activeProposal?.initial_crossings;
+      if (activeCrossings !== undefined && activeCrossings > 0) {
+        layoutLabel.textContent = `Tangled: ${activeCrossings} crossings`;
+        badgeLayout.classList.add('warning');
+        badgeLayout.classList.remove('safe', 'slate');
       } else if (this.activeProposal) {
         layoutLabel.textContent = 'Layout: Pending Approval';
+        badgeLayout.classList.add('warning');
+        badgeLayout.classList.remove('safe', 'slate');
       } else {
-        layoutLabel.textContent = 'Layout: Untangle ▶';
+        const currentCrossings = countCrossings(state.graph_nodes, edges);
+        if (currentCrossings === 0) {
+          layoutLabel.textContent = 'Layout: Optimal ✓';
+          badgeLayout.classList.remove('warning', 'slate');
+          badgeLayout.classList.add('safe');
+        } else {
+          layoutLabel.textContent = 'Layout: Untangle ▶';
+          badgeLayout.classList.remove('safe', 'slate');
+          badgeLayout.classList.add('warning');
+        }
       }
     }
 

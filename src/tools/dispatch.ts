@@ -495,7 +495,13 @@ function handleApprovalGate(
   activityBus.emit('approval-required', {
     tool_call_id: toolCallId,
     region_node_ids: proposal.region_node_ids,
-    preview: { candidate_positions: proposal.candidate_positions },
+    preview: {
+      candidate_positions: proposal.candidate_positions,
+      candidate_crossings: proposal.candidate_crossings,
+      initial_crossings: proposal.initial_crossings,
+      crossings_before: proposal.initial_crossings,
+      crossings_after: proposal.candidate_crossings,
+    },
     timestamp: Date.now(),
   });
 

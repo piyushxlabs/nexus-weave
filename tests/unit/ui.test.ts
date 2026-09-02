@@ -561,5 +561,48 @@ describe('Step 16: UI Components & Affordances', () => {
 
       canvas.destroy();
     });
+
+    it('settles Layout badge to Layout: Optimal when 0 crossings exist in graph', () => {
+      const svg = new MockElement('SVG') as unknown as SVGSVGElement;
+      let state = createInitialState();
+      const seed = createSeedGraph();
+      state.graph_nodes = seed.nodes;
+      state.graph_edges = seed.edges;
+
+      // Mock DOM badge layout elements
+      const badgeLayout = new MockElement('DIV');
+      badgeLayout.id = 'badge-layout';
+      const layoutLabel = new MockElement('SPAN');
+      layoutLabel.id = 'hud-layout-label';
+      badgeLayout.appendChild(layoutLabel);
+
+      (globalThis as any).document.getElementById = (id: string) => {
+        if (id === 'badge-layout') return badgeLayout;
+        if (id === 'hud-layout-label') return layoutLabel;
+        return null;
+      };
+
+      const canvas = new GraphCanvas({
+        svgElement: svg,
+        getState: () => state,
+        setState: (s) => {
+          state = s;
+        },
+      });
+
+      // Initially tangled (2 crossings)
+      expect(layoutLabel.textContent).toBe('Layout: Untangle ▶');
+      expect(badgeLayout.classList.contains('warning')).toBe(true);
+
+      // Untangle auth-service to eliminate crossings (glide down to y: 470)
+      state.graph_nodes['auth-service'].y = 470;
+      canvas.render();
+
+      expect(layoutLabel.textContent).toBe('Layout: Optimal ✓');
+      expect(badgeLayout.classList.contains('safe')).toBe(true);
+      expect(badgeLayout.classList.contains('warning')).toBe(false);
+
+      canvas.destroy();
+    });
   });
 });
