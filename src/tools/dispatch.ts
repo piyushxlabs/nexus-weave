@@ -16,6 +16,7 @@ import {
   reduceToolArtifacts,
 } from '../state/reducers.js';
 import { activityBus } from '../ui/activityBus.js';
+import { activityLogger } from '../telemetry/activityLog.js';
 import type { WebMCPExecutionContext, WebMCPToolResult } from '../webmcp/webmcp.js';
 import { validateGetGraphTopologyArgs } from './schemas/getGraphTopology.schema.js';
 import { validateDetectCyclesAndBottlenecksArgs } from './schemas/detectCyclesAndBottlenecks.schema.js';
@@ -175,6 +176,7 @@ export async function dispatchToolCall(
     args,
     timestamp,
   });
+  activityLogger.recordStart(toolCallId, toolName, args, timestamp);
 
   // Concurrency Lock Check for mutating calls
   if (isMutating) {
@@ -222,6 +224,7 @@ export async function dispatchToolCall(
       status: 'in_progress',
       timestamp: Date.now(),
     });
+    activityLogger.recordStatus(toolCallId, 'in_progress');
 
     const handler = toolHandlers.get(toolName);
     let result: Record<string, unknown> | null = null;
@@ -276,6 +279,12 @@ export async function dispatchToolCall(
       result,
       timestamp: Date.now(),
     });
+    activityLogger.recordResult(
+      toolCallId,
+      toolName,
+      result,
+      isMutating ? 'applied' : undefined
+    );
 
     return {
       success: true,
@@ -467,6 +476,7 @@ function handleApprovalGate(
     status: 'proposed',
     timestamp: Date.now(),
   });
+  activityLogger.recordStatus(toolCallId, 'proposed');
 
   activityBus.emit('approval-required', {
     tool_call_id: toolCallId,
@@ -483,6 +493,12 @@ function handleApprovalGate(
     result: toolResultRecord.result as Record<string, unknown>,
     timestamp: Date.now(),
   });
+  activityLogger.recordResult(
+    toolCallId,
+    toolName,
+    toolResultRecord.result as Record<string, unknown>,
+    'proposed'
+  );
 
   return {
     success: true,
@@ -518,6 +534,7 @@ function handleFailure(
     error: errorMessage,
     timestamp: Date.now(),
   });
+  activityLogger.recordError(toolCallId, toolName, errorMessage);
 
   return {
     success: false,
