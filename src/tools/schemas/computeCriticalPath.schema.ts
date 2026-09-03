@@ -48,7 +48,7 @@ export const computeCriticalPathInputSchema = {
 export const computeCriticalPathMetadata = {
   name: COMPUTE_CRITICAL_PATH_NAME,
   description:
-    'Compute and highlight the critical path given a duration field already present on nodes. Fails explicitly (never guesses) if no node has the named field, or if the duration-bearing subgraph is not acyclic.',
+    'Calculates the longest latency execution path in the DAG. Call this when evaluating system latency bottlenecks.',
   strict: true,
   annotations: computeCriticalPathAnnotations,
   inputSchema: computeCriticalPathInputSchema,

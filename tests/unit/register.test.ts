@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   getModelContext,
+  getAvailableModelContexts,
   isWebMCPSupported,
   createToolDefinitions,
   registerAllTools,
   setupWebMCPLifecycle,
+  normalizeToolArguments,
 } from '../../src/webmcp/register.js';
 import type { ModelContext, WebMCPToolDefinition, RegisterToolOptions } from '../../src/webmcp/webmcp.d.js';
 import { createInitialState, type GraphAgentState } from '../../src/state/schema.js';
@@ -196,6 +198,143 @@ describe('Step 14: WebMCP Tool Registration Engine', () => {
       // Verify clean abort
       lifecycle.controller.abort();
       expect(lifecycle.controller.signal.aborted).toBe(true);
+    });
+  });
+
+  describe('Resilience Audit: Input Argument Normalization', () => {
+    it('normalizeToolArguments parses JSON string into object', () => {
+      expect(normalizeToolArguments('{"duration_field": "latency"}')).toEqual({
+        duration_field: 'latency',
+      });
+      expect(normalizeToolArguments('{}')).toEqual({});
+    });
+
+    it('normalizeToolArguments uses objects directly', () => {
+      const obj = { region_node_ids: ['api-gateway'] };
+      expect(normalizeToolArguments(obj)).toEqual(obj);
+    });
+
+    it('normalizeToolArguments defaults null and undefined to empty object {}', () => {
+      expect(normalizeToolArguments(null)).toEqual({});
+      expect(normalizeToolArguments(undefined)).toEqual({});
+    });
+
+    it('normalizeToolArguments safely catches malformed JSON without throwing', () => {
+      expect(normalizeToolArguments('{broken-json: true')).toEqual({});
+      expect(normalizeToolArguments('not json at all')).toEqual({});
+      expect(normalizeToolArguments('')).toEqual({});
+      expect(normalizeToolArguments('   ')).toEqual({});
+      expect(normalizeToolArguments('123')).toEqual({});
+    });
+
+    it('tool.execute supports JSON stringified arguments from autonomous LLMs', async () => {
+      const registeredTools: WebMCPToolDefinition[] = [];
+      const mockContext: ModelContext = {
+        registerTool: (tool) => {
+          registeredTools.push(tool);
+        },
+        getTools: () => registeredTools,
+      };
+      const g = globalThis as any;
+      g.document = { modelContext: mockContext };
+
+      registerAllTools(stateAccessor);
+
+      const pinTool = registeredTools.find((t) => t.name === 'pin_and_group_region')!;
+      // Pass arguments as a serialized JSON string
+      const stringArg = JSON.stringify({ node_ids: ['order-service'], pinned: true });
+      const result = await pinTool.execute(stringArg as any);
+
+      expect(result.success).toBe(true);
+      expect(result.status).toBe('applied');
+      expect(state.pinned_node_ids.has('order-service')).toBe(true);
+    });
+
+    it('tool.execute gracefully handles null, undefined, and malformed strings without throwing', async () => {
+      const registeredTools: WebMCPToolDefinition[] = [];
+      const mockContext: ModelContext = {
+        registerTool: (tool) => {
+          registeredTools.push(tool);
+        },
+        getTools: () => registeredTools,
+      };
+      const g = globalThis as any;
+      g.document = { modelContext: mockContext };
+
+      registerAllTools(stateAccessor);
+
+      const topoTool = registeredTools.find((t) => t.name === 'get_graph_topology')!;
+
+      // Null argument
+      const resNull = await topoTool.execute(null as any);
+      expect(resNull.success).toBe(true);
+
+      // Undefined argument
+      const resUndefined = await topoTool.execute(undefined as any);
+      expect(resUndefined.success).toBe(true);
+
+      // Malformed string argument: normalized to {}, which is valid for get_graph_topology
+      const resMalformed = await topoTool.execute('{malformed json' as any);
+      expect(resMalformed.success).toBe(true);
+    });
+  });
+
+  describe('Resilience Audit: Dual Context Safety', () => {
+    it('registers on both document.modelContext and navigator.modelContext if both are present', () => {
+      const docTools: string[] = [];
+      const navTools: string[] = [];
+
+      const mockDocContext: ModelContext = {
+        registerTool: (tool) => docTools.push(tool.name),
+        getTools: () => [],
+      };
+      const mockNavContext: ModelContext = {
+        registerTool: (tool) => navTools.push(tool.name),
+        getTools: () => [],
+      };
+
+      const g = globalThis as any;
+      g.document = { modelContext: mockDocContext };
+      g.navigator = { modelContext: mockNavContext };
+
+      const available = getAvailableModelContexts();
+      expect(available).toHaveLength(2);
+
+      const result = registerAllTools(stateAccessor);
+      expect(result.registeredCount).toBe(5);
+      expect(docTools).toHaveLength(5);
+      expect(navTools).toHaveLength(5);
+    });
+
+    it('suppresses duplicate registration errors without throwing unhandled exceptions', () => {
+      const mockContext: ModelContext = {
+        registerTool: (tool) => {
+          if (tool.name === 'get_graph_topology') {
+            throw new Error("Tool 'get_graph_topology' has already been registered");
+          }
+        },
+        getTools: () => [],
+      };
+
+      const g = globalThis as any;
+      g.document = { modelContext: mockContext };
+
+      // Should not throw despite duplicate registration error
+      expect(() => registerAllTools(stateAccessor)).not.toThrow();
+    });
+
+    it('rethrows non-duplicate errors from registerTool', () => {
+      const mockContext: ModelContext = {
+        registerTool: () => {
+          throw new Error('Fatal host environment crash');
+        },
+        getTools: () => [],
+      };
+
+      const g = globalThis as any;
+      g.document = { modelContext: mockContext };
+
+      expect(() => registerAllTools(stateAccessor)).toThrowError('Fatal host environment crash');
     });
   });
 });

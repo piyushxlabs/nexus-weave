@@ -167,6 +167,38 @@ export interface DispatchStateAccessor {
   setState: (nextState: GraphAgentState) => void;
 }
 
+/**
+ * Defensively normalizes incoming input arguments for any tool invocation.
+ * - If input is a JSON string, safely JSON.parse() it.
+ * - If input is already an object (and non-null, non-array), use it directly.
+ * - If input is null/undefined or parsing fails, default to an empty object {}.
+ * - Parsing is wrapped in try/catch to never throw an unhandled exception to the browser host.
+ */
+export function normalizeToolArguments(rawArgs: unknown): Record<string, unknown> {
+  if (rawArgs === null || rawArgs === undefined) {
+    return {};
+  }
+  if (typeof rawArgs === 'string') {
+    const trimmed = rawArgs.trim();
+    if (trimmed === '') {
+      return {};
+    }
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+      return {};
+    } catch {
+      return {};
+    }
+  }
+  if (typeof rawArgs === 'object' && !Array.isArray(rawArgs)) {
+    return rawArgs as Record<string, unknown>;
+  }
+  return {};
+}
+
 // ============================================================================
 // 6-Step Deterministic Dispatch Engine
 // ============================================================================
@@ -175,10 +207,11 @@ let callIdCounter = 0;
 
 export async function dispatchToolCall(
   toolName: string,
-  args: Record<string, unknown>,
+  rawArgs: unknown,
   stateAccessor: DispatchStateAccessor,
   context?: WebMCPExecutionContext
 ): Promise<WebMCPToolResult> {
+  const args = normalizeToolArguments(rawArgs);
   const toolCallId = `call_${Date.now()}_${++callIdCounter}`;
   const timestamp = Date.now();
   const isMutating = MUTATING_TOOL_NAMES.has(toolName);

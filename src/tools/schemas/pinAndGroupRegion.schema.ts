@@ -53,7 +53,7 @@ export const pinAndGroupRegionInputSchema = {
 export const pinAndGroupRegionMetadata = {
   name: PIN_AND_GROUP_REGION_NAME,
   description:
-    'Mark specific, explicitly named nodes/clusters as pinned (protected from future automatic layout changes) or unpinned. Only ever acts on an explicit, unambiguous list of node IDs — never infers which nodes are meant.',
+    'Mechanically locks specified nodes against agent repositioning.',
   strict: true,
   annotations: pinAndGroupRegionAnnotations,
   inputSchema: pinAndGroupRegionInputSchema,

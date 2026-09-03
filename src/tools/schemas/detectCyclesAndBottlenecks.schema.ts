@@ -44,7 +44,7 @@ export const detectCyclesAndBottlenecksInputSchema = {
 export const detectCyclesAndBottlenecksMetadata = {
   name: DETECT_CYCLES_AND_BOTTLENECKS_NAME,
   description:
-    'Detect circular dependencies and bottleneck/high-centrality nodes in the current graph. Read-only, no side effects beyond annotating identified cyclic edges.',
+    "Deterministic detection of circular dependency deadlocks (using Tarjan's SCC) and bottleneck nodes in the microservice topology. Call this whenever the user asks about deadlocks, cycles, loops, or bottlenecks.",
   strict: true,
   annotations: detectCyclesAndBottlenecksAnnotations,
   inputSchema: detectCyclesAndBottlenecksInputSchema,

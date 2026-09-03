@@ -57,7 +57,7 @@ export const minimizeEdgeCrossingsInputSchema = {
 export const minimizeEdgeCrossingsMetadata = {
   name: MINIMIZE_EDGE_CROSSINGS_NAME,
   description:
-    "Re-lay-out a human-designated region of unpinned nodes to reduce edge crossings. Never moves a pinned node. A full-graph or large-share request returns a proposal (status: 'proposed') for the human to see animate before it is committed; call again with confirm_pending: true on the identical region to commit it.",
+    'Untangle crossing dependency edges in the architecture layout. Triggers a Human-in-the-Loop review if blast radius > 30%. Call this when user requests layout optimization or untangling.',
   strict: true,
   annotations: minimizeEdgeCrossingsAnnotations,
   inputSchema: minimizeEdgeCrossingsInputSchema,

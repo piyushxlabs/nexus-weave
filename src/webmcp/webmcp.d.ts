@@ -30,7 +30,7 @@ export interface WebMCPToolDefinition {
   strict?: boolean;
   annotations?: ToolAnnotations;
   inputSchema: Record<string, unknown>;
-  execute: (args: Record<string, unknown>, context?: WebMCPExecutionContext) => Promise<WebMCPToolResult>;
+  execute: (args: unknown, context?: WebMCPExecutionContext) => Promise<WebMCPToolResult>;
 }
 
 export interface RegisterToolOptions {

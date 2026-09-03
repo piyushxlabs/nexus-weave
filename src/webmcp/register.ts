@@ -9,8 +9,15 @@ import type {
   ModelContext,
   WebMCPToolDefinition,
   RegisterToolOptions,
+  WebMCPExecutionContext,
 } from './webmcp.d.js';
-import { dispatchToolCall, type DispatchStateAccessor } from '../tools/dispatch.js';
+import {
+  dispatchToolCall,
+  normalizeToolArguments,
+  type DispatchStateAccessor,
+} from '../tools/dispatch.js';
+
+export { normalizeToolArguments };
 
 import {
   GET_GRAPH_TOPOLOGY_NAME,
@@ -52,6 +59,25 @@ export function getModelContext(): ModelContext | null {
 }
 
 /**
+ * Resolves all available modelContext surfaces (document.modelContext and navigator.modelContext).
+ * Deduplicates if document.modelContext and navigator.modelContext point to the same object reference.
+ */
+export function getAvailableModelContexts(): ModelContext[] {
+  const contexts: ModelContext[] = [];
+  const seen = new Set<ModelContext>();
+
+  if (typeof document !== 'undefined' && document.modelContext) {
+    contexts.push(document.modelContext);
+    seen.add(document.modelContext);
+  }
+  if (typeof navigator !== 'undefined' && navigator.modelContext && !seen.has(navigator.modelContext)) {
+    contexts.push(navigator.modelContext);
+    seen.add(navigator.modelContext);
+  }
+  return contexts;
+}
+
+/**
  * Checks if the WebMCP Imperative API is available in the current browser runtime.
  */
 export function isWebMCPSupported(): boolean {
@@ -59,7 +85,7 @@ export function isWebMCPSupported(): boolean {
 }
 
 /**
- * Creates definitions for all 5 WebMCP tools wired to dispatchToolCall.
+ * Creates definitions for all 5 WebMCP tools wired to dispatchToolCall with defensive argument normalization.
  */
 export function createToolDefinitions(
   stateAccessor: DispatchStateAccessor,
@@ -72,7 +98,8 @@ export function createToolDefinitions(
       strict: true,
       annotations: getGraphTopologyMetadata.annotations,
       inputSchema: getGraphTopologyMetadata.inputSchema as Record<string, unknown>,
-      execute: async (args, context) => {
+      execute: async (rawArgs: unknown, context?: WebMCPExecutionContext) => {
+        const args = normalizeToolArguments(rawArgs);
         return dispatchToolCall(GET_GRAPH_TOPOLOGY_NAME, args, stateAccessor, {
           signal: context?.signal ?? defaultSignal,
           toolCallId: context?.toolCallId,
@@ -85,7 +112,8 @@ export function createToolDefinitions(
       strict: true,
       annotations: detectCyclesAndBottlenecksMetadata.annotations,
       inputSchema: detectCyclesAndBottlenecksMetadata.inputSchema as Record<string, unknown>,
-      execute: async (args, context) => {
+      execute: async (rawArgs: unknown, context?: WebMCPExecutionContext) => {
+        const args = normalizeToolArguments(rawArgs);
         return dispatchToolCall(DETECT_CYCLES_AND_BOTTLENECKS_NAME, args, stateAccessor, {
           signal: context?.signal ?? defaultSignal,
           toolCallId: context?.toolCallId,
@@ -98,7 +126,8 @@ export function createToolDefinitions(
       strict: true,
       annotations: computeCriticalPathMetadata.annotations,
       inputSchema: computeCriticalPathMetadata.inputSchema as Record<string, unknown>,
-      execute: async (args, context) => {
+      execute: async (rawArgs: unknown, context?: WebMCPExecutionContext) => {
+        const args = normalizeToolArguments(rawArgs);
         return dispatchToolCall(COMPUTE_CRITICAL_PATH_NAME, args, stateAccessor, {
           signal: context?.signal ?? defaultSignal,
           toolCallId: context?.toolCallId,
@@ -111,7 +140,8 @@ export function createToolDefinitions(
       strict: true,
       annotations: minimizeEdgeCrossingsMetadata.annotations,
       inputSchema: minimizeEdgeCrossingsMetadata.inputSchema as Record<string, unknown>,
-      execute: async (args, context) => {
+      execute: async (rawArgs: unknown, context?: WebMCPExecutionContext) => {
+        const args = normalizeToolArguments(rawArgs);
         return dispatchToolCall(MINIMIZE_EDGE_CROSSINGS_NAME, args, stateAccessor, {
           signal: context?.signal ?? defaultSignal,
           toolCallId: context?.toolCallId,
@@ -124,7 +154,8 @@ export function createToolDefinitions(
       strict: true,
       annotations: pinAndGroupRegionMetadata.annotations,
       inputSchema: pinAndGroupRegionMetadata.inputSchema as Record<string, unknown>,
-      execute: async (args, context) => {
+      execute: async (rawArgs: unknown, context?: WebMCPExecutionContext) => {
+        const args = normalizeToolArguments(rawArgs);
         return dispatchToolCall(PIN_AND_GROUP_REGION_NAME, args, stateAccessor, {
           signal: context?.signal ?? defaultSignal,
           toolCallId: context?.toolCallId,
@@ -141,21 +172,38 @@ export interface RegisterAllToolsResult {
 }
 
 /**
- * Registers all 5 WebMCP tools against the active ModelContext.
+ * Registers all 5 WebMCP tools against all active ModelContext surfaces.
+ * Executes on both document.modelContext and navigator.modelContext if present,
+ * without throwing duplicate registration errors.
  */
 export function registerAllTools(
   stateAccessor: DispatchStateAccessor,
   options?: RegisterToolOptions
 ): RegisterAllToolsResult {
-  const context = getModelContext();
-  if (!context) {
+  const contexts = getAvailableModelContexts();
+  if (contexts.length === 0) {
     throw new Error('WebMCP is not supported in this runtime environment (getModelContext() is null).');
   }
 
   const tools = createToolDefinitions(stateAccessor, options?.signal);
 
-  for (const tool of tools) {
-    context.registerTool(tool, options);
+  for (const context of contexts) {
+    for (const tool of tools) {
+      try {
+        context.registerTool(tool, options);
+      } catch (err: unknown) {
+        // Defensive: ignore duplicate registration errors across surfaces
+        const errorMsg = String((err as any)?.message ?? err).toLowerCase();
+        if (
+          errorMsg.includes('already') ||
+          errorMsg.includes('duplicate') ||
+          errorMsg.includes('exists')
+        ) {
+          continue;
+        }
+        throw err;
+      }
+    }
   }
 
   return {
