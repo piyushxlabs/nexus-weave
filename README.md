@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./assets/banner.png" alt="Nexus Weave — Zero-Egress Client-Side WebMCP Dependency Graph Engine" width="100%" style="border-radius: 12px;" />
+<img src="https://raw.githubusercontent.com/piyushxlabs/nexus-weave/main/assets/banner.png" alt="Nexus Weave — Zero-Egress Client-Side WebMCP Dependency Graph Engine" width="100%" style="border-radius: 12px;" />
 
 # 🌐 Nexus Weave
 
