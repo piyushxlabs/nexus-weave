@@ -13,19 +13,19 @@
 [![Zero Egress](https://img.shields.io/badge/Zero_Egress-100%25_In--Browser_(0KB_Network)-06B6D4?style=for-the-badge&logo=shield&logoColor=white)](https://github.com/piyushxlabs/nexus-weave)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9%2B_(Strict_Mode)-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-6.0%2B-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tests](https://img.shields.io/badge/Tests-131%2F131_Passing_(100%25)-10B981?style=for-the-badge&logo=vitest&logoColor=white)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-140%2F140_Passing_(100%25)-10B981?style=for-the-badge&logo=vitest&logoColor=white)](./tests/)
 [![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](./LICENSE)
 [![Security](https://img.shields.io/badge/Security-OWASP_Agentic_Top_10_Compliant-EF4444?style=for-the-badge&logo=owasp&logoColor=white)](https://github.com/piyushxlabs/nexus-weave)
 
 ---
 
-> ### 📺 **Official Video Demonstration & Architecture Walkthrough**
+> ### 📺 **Official Video Demonstration & Architecture Walkthrough (2.5-Minute Official Architecture Walkthrough (1080p60))**
 >
 > <div align="center">
->   <a href="https://youtu.be/YOUR_DEMO_VIDEO_ID" target="_blank">
+>   <a href="https://youtu.be/SqhjPxpT9OE" target="_blank">
 >     <img src="./assets/demo_thumbnail.png" alt="Nexus Weave Video Walkthrough" width="100%" style="border-radius: 10px; max-width: 800px;" />
 >   </a>
->   <p><strong>▶️ <a href="https://youtu.be/YOUR_DEMO_VIDEO_ID" target="_blank">Click to Watch Full Architecture Walkthrough on YouTube</a></strong></p>
+>   <p><strong>▶️ <a href="https://youtu.be/SqhjPxpT9OE" target="_blank">Click to Watch 2.5-Minute Official Architecture Walkthrough (1080p60) on YouTube</a></strong></p>
 >   <p><em>Autonomous Tarjan Cycle Detection • Human-in-the-Loop Safety Gate • Zero-Egress In-Browser Execution</em></p>
 > </div>
 
@@ -64,7 +64,9 @@ Nexus Weave establishes **bidirectional safety boundaries** between engineers an
 - **Human-in-the-Loop (HITL) Safety Gate:** Whenever an AI agent proposes layout reorganizations exceeding a **30% blast radius** (or targeting the whole graph), execution halts deterministically. The engine renders a live **Ghost-Node coordinate overlay**, allowing the human engineer to review the prospective untangling and click **"Approve & Apply"** (`confirm_pending: true`) before state commitment.
 
 ### 4. ⚙️ How WebMCP Was Implemented
-- **Universal Dual-Detection:** Universal `getModelContext()` helper seamlessly detects both `document.modelContext` and `navigator.modelContext`.
+- **Universal Dual-Detection & Multi-Surface Registration:** `getAvailableModelContexts(): ModelContext[]` resolves both `document.modelContext` and `navigator.modelContext` simultaneously, registering tools across all active browser surfaces while defensively suppressing duplicate-registration errors.
+- **Defensive Argument Normalization:** The `normalizeToolArguments(rawArgs: unknown)` runtime layer (in `src/tools/dispatch.ts` and `src/webmcp/register.ts`) guarantees resilience against stringified JSON arguments, null/undefined payloads, and malformed inputs from autonomous LLM callers (ChatGPT in-app browser and Chrome Canary).
+- **Dispatch Proxy Architecture:** The `src/webmcp/dispatch.ts` re-export proxy module cleanly decouples WebMCP registration and browser host binding from internal graph dispatch logic.
 - **Strict Schema Validation:** All 5 tool inputs are strictly validated at runtime against compiled **Ajv v8 JSON Schema Draft-07** definitions using the canonical `inputSchema` property.
 - **Deterministic 6-Step Dispatch Lifecycle:** Validate ➔ Trust & Scope Check ➔ Branch Decision ➔ Compute-Then-Atomic-Apply ➔ Pure Reducer Commit ➔ In-Page EventBus Emission.
 - **Pure Functional Reducers:** Ephemeral in-memory state (`GraphAgentState`) managed purely via `mergeByKey`, `appendOnly`, and `lastWriteWins` reducers with zero persistence.
@@ -170,6 +172,18 @@ All 5 tools are registered exclusively via `document.modelContext.registerTool` 
 ### WebMCP Tool Registration & Execution Engine (src/webmcp/register.ts)
 
 ```typescript
+// Canonical WebMCP Imperative Registration (W3C / WebMCP Challenge Compliant)
+document.modelContext.registerTool({
+  name: "detect_cycles_and_bottlenecks",
+  description: "Deterministic detection of circular dependency deadlocks (using Tarjan's SCC) and bottleneck nodes in the microservice topology. Call this whenever the user asks about deadlocks, cycles, loops, or bottlenecks.",
+  inputSchema: detectCyclesAndBottlenecksInputSchema,
+  execute: async (input) => {
+    return dispatchToolCall("detect_cycles_and_bottlenecks", input, stateAccessor);
+  }
+});
+```
+
+```typescript
 // src/webmcp/register.ts — Authentic Context Acquisition & Native Tool Registration
 import { dispatchToolCall, type DispatchStateAccessor } from '../tools/dispatch.js';
 import {
@@ -261,20 +275,45 @@ export const minimizeEdgeCrossingsInputSchema = {
 
 ## 🏆 Key Innovations & Judging Criteria Alignment
 
-### 1. 🌐 WebMCP Leverage & Universal Dual-Detection
+### 1. 🌐 WebMCP Leverage, Universal Dual-Detection & Input Normalization
 
-Nexus Weave implements a universal `getModelContext()` helper that supports **both** `document.modelContext` and `navigator.modelContext` detection surfaces, ensuring compatibility across Chrome Canary WebMCP testing flags and ChatGPT in-app browser runtimes. All tool `inputSchema` objects are validated at compile time via `ajv` v8 against JSON Schema Draft-07 / 2020-12.
+Nexus Weave implements a resilient, multi-surface registration engine in `src/webmcp/register.ts`. The `getAvailableModelContexts()` helper discovers **both** `document.modelContext` and `navigator.modelContext` detection surfaces, ensuring compatibility across Chrome Canary WebMCP testing flags (`chrome://flags/#enable-webmcp-testing`), W3C community group drafts, and ChatGPT in-app browser runtimes. Tools are registered across all detected surfaces with defensive duplicate-error suppression.
+
+To defend against autonomous LLM callers that emit serialized JSON strings or invoke tools with null/undefined arguments, the `normalizeToolArguments(rawArgs: unknown)` runtime layer (in `src/tools/dispatch.ts` and `src/webmcp/register.ts`) normalizes inputs before passing them to compiled `ajv` v8 JSON Schema Draft-07 validators. All dispatch logic is cleanly proxied through `src/webmcp/dispatch.ts`.
 
 ```typescript
-// src/webmcp/register.ts — universal dual-detection
-export function getModelContext(): ModelContext | null {
+// src/webmcp/register.ts — Universal Dual-Detection & Multi-Surface Discovery
+export function getAvailableModelContexts(): ModelContext[] {
+  const contexts: ModelContext[] = [];
+  const seen = new Set<ModelContext>();
+
   if (typeof document !== 'undefined' && document.modelContext) {
-    return document.modelContext;
+    contexts.push(document.modelContext);
+    seen.add(document.modelContext);
   }
-  if (typeof navigator !== 'undefined' && navigator.modelContext) {
-    return navigator.modelContext;
+  if (typeof navigator !== 'undefined' && navigator.modelContext && !seen.has(navigator.modelContext)) {
+    contexts.push(navigator.modelContext);
+    seen.add(navigator.modelContext);
   }
-  return null;
+  return contexts;
+}
+
+// src/tools/dispatch.ts & src/webmcp/register.ts — Defensive Argument Normalization
+export function normalizeToolArguments(rawArgs: unknown): Record<string, unknown> {
+  if (typeof rawArgs === 'string') {
+    try {
+      const parsed = JSON.parse(rawArgs);
+      return parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>)
+        : {};
+    } catch {
+      return {};
+    }
+  }
+  if (rawArgs !== null && typeof rawArgs === 'object' && !Array.isArray(rawArgs)) {
+    return rawArgs as Record<string, unknown>;
+  }
+  return {};
 }
 ```
 
@@ -306,10 +345,10 @@ The built-in Chaos Engineering cascade simulator demonstrates live downstream fa
 
 ---
 
-## 🔬 Automated Verification & Test Suite — 131 / 131 Passing
+## 🔬 Automated Verification & Test Suite — 140 / 140 Passing
 
 ```bash
-pnpm test:unit    # 124 Vitest unit tests across 15 suites
+pnpm test:unit    # 133 Vitest unit tests across 15 suites
 pnpm test:e2e     # 7 Playwright WebMCP browser E2E tests
 ```
 
@@ -324,7 +363,7 @@ pnpm test:e2e     # 7 Playwright WebMCP browser E2E tests
 | **Critical Path Tool** | `computeCriticalPath.test.ts` | Silence-Over-Guessing on cycles & DAG longest path | ✅ Pass (5/5) |
 | **Edge Crossing Minimizer** | `minimizeEdgeCrossings.test.ts` | Planar line intersections & HITL proposal routing | ✅ Pass (10/10) |
 | **Pin Region Tool** | `pinAndGroupRegion.test.ts` | Atomic all-or-nothing pin state mutations | ✅ Pass (5/5) |
-| **WebMCP Registration Engine** | `register.test.ts` | `AbortController` teardown & tool exposure | ✅ Pass (8/8) |
+| **WebMCP Registration Engine** | `register.test.ts` | `AbortController` teardown, dual-context & arg resilience | ✅ Pass (17/17) |
 | **In-Page Activity Bus** | `activityBus.test.ts` | Native `EventTarget` typed domain event dispatch | ✅ Pass (7/7) |
 | **UI Components & Affordances** | `ui.test.ts` | Viewport centering, pin badges, proposal review banner | ✅ Pass (12/12) |
 | **In-Memory Telemetry** | `telemetry.test.ts` | OpenTelemetry GenAI span attributes & ring-buffer | ✅ Pass (6/6) |
@@ -332,7 +371,7 @@ pnpm test:e2e     # 7 Playwright WebMCP browser E2E tests
 | **Production Readiness** | `productionReadiness.test.ts` | MIT license check, bundle sanitization, zero network calls | ✅ Pass (5/5) |
 | **Browser E2E Suite** | `webmcp.spec.ts` | Canvas mounting, direct drag, panning, zoom, badges | ✅ Pass (5/5) |
 | **E2E 6-Stage Lifecycle** | `verificationFlow.spec.ts` | Full autonomous loop: Scan ➔ Untangle ➔ Pin ➔ Block | ✅ Pass (2/2) |
-| **TOTAL** | | **17 Test Suites (Unit + E2E)** | **131 / 131 ✅** |
+| **TOTAL** | | **17 Test Suites (Unit + E2E)** | **140 / 140 ✅** |
 
 E2E tests are launched with Chrome flags `--enable-features=WebMCPTesting,DevToolsWebMCPSupport` via `@playwright/test` as configured in `playwright.config.ts`.
 
@@ -385,7 +424,7 @@ pnpm install
 pnpm run dev
 # → Open http://localhost:5173
 
-# 3. Run complete automated verification suite (131/131 Passing)
+# 3. Run complete automated verification suite (140/140 Passing)
 pnpm run typecheck ; pnpm test:unit ; pnpm test:e2e
 
 # 4. Create production build (Static 0-dependency bundle)
@@ -399,39 +438,65 @@ pnpm run build
 Judges on Chrome Canary (or any WebMCP-enabled browser) can open the browser console (`F12` ➔ **Console**) and paste this test script to verify all 5 tools interactively in real time:
 
 ```javascript
-// ── 1. Discover Registered Tools ─────────────────────────────────────────────
-const ctx = document.modelContext ?? navigator.modelContext;
-if (!ctx) {
-  console.warn("WebMCP flag not enabled. Enable chrome://flags/#enable-webmcp-testing");
-} else {
+// ── Nexus Weave Universal WebMCP Evaluation Script (All 5 Tools) ───────────
+(async function evaluateNexusWeave() {
+  const ctx = document.modelContext ?? navigator.modelContext;
+  if (!ctx) {
+    console.warn("⚠️ WebMCP not active. Enable chrome://flags/#enable-webmcp-testing");
+    return;
+  }
+
   const tools = await ctx.getTools();
-  console.log("✅ WebMCP Tools Registered:", tools.map(t => t.name));
+  const toolMap = Object.fromEntries(tools.map(t => [t.name, t]));
+  console.log("✅ WebMCP Tools Registered (5/5):", Object.keys(toolMap));
 
-  // ── 2. Run Autonomous Deadlock & Bottleneck Analysis ───────────────────────
-  console.log("🔍 Running Tarjan's SCC cycle & bottleneck detection...");
-  const deadlockResult = await ctx.executeTool("detect_cycles_and_bottlenecks", {});
-  console.log("Tarjan SCC Result (Isolated 3-node deadlock):", deadlockResult);
+  // Universal invoker supporting ctx.executeTool(string), ctx.executeTool(obj), and tool.execute()
+  const invoke = async (name, args) => {
+    const t = toolMap[name];
+    if (!t) throw new Error(`Tool ${name} not found`);
+    if (typeof ctx.executeTool === 'function') {
+      try { return await ctx.executeTool(name, args); }
+      catch (_) { return await ctx.executeTool(t, args); }
+    }
+    return await t.execute(args);
+  };
 
-  // ── 3. Run DAG Longest-Path Critical Path Computation ──────────────────────
-  console.log("📏 Computing Critical Path...");
-  const criticalPathResult = await ctx.executeTool("compute_critical_path", { duration_field: "duration" });
-  console.log("Critical Path Result:", criticalPathResult);
+  // 1. Snapshot Graph Topology (get_graph_topology)
+  console.log("1️⃣ [get_graph_topology] Fetching Graph Topology Snapshot...");
+  const topo = await invoke("get_graph_topology", {});
+  console.log("   Topology Loaded:", topo.result.nodes.length, "nodes,", topo.result.edges.length, "edges");
 
-  // ── 4. Trigger Layout Reorganization (>30% blast radius HITL Proposal) ─────
-  console.log("📐 Requesting Layout Untangling (Triggers Ghost-Node HITL Gate)...");
-  const proposalResult = await ctx.executeTool("minimize_edge_crossings", {
-    region_node_ids: ["order-service", "auth-service", "catalog-service", "payment-service", "notification-service", "inventory-service"]
-  });
-  console.log("HITL Layout Proposal:", proposalResult);
+  // 2. Autonomous Deadlock & Bottleneck Detection via Tarjan's SCC (detect_cycles_and_bottlenecks)
+  console.log("2️⃣ [detect_cycles_and_bottlenecks] Running Tarjan SCC Deadlock Detection (<3ms)...");
+  const cycles = await invoke("detect_cycles_and_bottlenecks", {});
+  console.log("   Deadlock Ring Isolated:", cycles.result.cyclic_edge_ids);
+  console.log("   Bottleneck Centrality Scores:", cycles.result.bottleneck_nodes.map(b => `${b.id} (${b.centrality_score.toFixed(2)})`).join(", "));
 
-  // ── 5. Confirm & Atomically Commit Untangled Layout ────────────────────────
-  console.log("✅ Confirming Layout Proposal...");
-  const commitResult = await ctx.executeTool("minimize_edge_crossings", {
-    region_node_ids: ["order-service", "auth-service", "catalog-service", "payment-service", "notification-service", "inventory-service"],
-    confirm_pending: true
-  });
-  console.log("Committed Layout (Crossings reduced to 0):", commitResult);
-}
+  // 3. DAG Longest-Path Critical Path Computation (compute_critical_path)
+  // Enforces Silence-Over-Guessing policy: deterministically rejects cyclic graphs without hallucination
+  console.log("3️⃣ [compute_critical_path] Computing Critical Path (Silence-Over-Guessing Policy)...");
+  const critPath = await invoke("compute_critical_path", { duration_field: "duration" });
+  if (!critPath.success) {
+    console.log("   ✅ Deterministic Cyclic Rejection (Silence-Over-Guessing):", critPath.error);
+  } else {
+    console.log("   Critical Path Nodes:", critPath.result.critical_path_node_ids, `Total Duration: ${critPath.result.total_duration}ms`);
+  }
+
+  // 4. Atomic Region Pinning & Structural Locking (pin_and_group_region)
+  console.log("4️⃣ [pin_and_group_region] Atomically Pinning Infrastructure Node ('api-gateway')...");
+  const pinResult = await invoke("pin_and_group_region", { node_ids: ["api-gateway"], pinned: true });
+  console.log("   Pinned Set Bitmask Updated:", pinResult.result.pinned_node_ids, `(Modified: ${pinResult.result.modified_count})`);
+
+  // 5. HITL Layout Untangling Gate & Atomic Approval (minimize_edge_crossings)
+  console.log("5️⃣ [minimize_edge_crossings] Requesting Layout Untangle (>30% Blast Radius HITL Gate)...");
+  const targetRegion = ["auth-service", "catalog-service", "order-service", "payment-service", "pricing-service", "user-service"];
+  const proposal = await invoke("minimize_edge_crossings", { region_node_ids: targetRegion });
+  console.log("   HITL Safety Gate Intercepted:", proposal.status === "proposed" ? "PROPOSAL_PENDING (Live Ghost-Node Overlay Active)" : proposal.status);
+
+  console.log("   Executing Human-in-the-Loop Sign-off (confirm_pending: true)...");
+  const commit = await invoke("minimize_edge_crossings", { region_node_ids: targetRegion, confirm_pending: true });
+  console.log("   Layout Committed Atomically:", commit.result.crossings_after === 0 ? "SUCCESS (2 → 0 Crossings Untangled)" : `Applied (${commit.result.crossings_after} crossings)`);
+})();
 ```
 
 ---
@@ -484,10 +549,11 @@ nexus-weave/
 │   │
 │   └── webmcp/
 │       ├── webmcp.d.ts                      # Ambient TypeScript declarations for ModelContext API
-│       └── register.ts                      # ONLY file that calls getModelContext().registerTool()
+│       ├── register.ts                      # Universal dual-context registration engine
+│       └── dispatch.ts                      # WebMCP dispatch re-export proxy module
 │
 ├── tests/
-│   ├── unit/                                # 15 Vitest unit test suites (124 tests)
+│   ├── unit/                                # 15 Vitest unit test suites (133 tests)
 │   └── e2e/                                 # 2 Playwright WebMCP E2E suites (7 tests)
 │
 ├── index.html                               # Single-page app shell
@@ -518,7 +584,7 @@ The application pre-loads a realistic microservices dependency graph on tab load
 | Initial Edge Crossings | **2** |
 | Post-Minimization Crossings | **0** |
 | Pinned Node Support | ✅ All-or-nothing atomic |
-| Automated Tests | **131 / 131** (124 Unit + 7 E2E) |
+| Automated Tests | **140 / 140** (133 Unit + 7 E2E) |
 | TypeScript Errors | **0** |
 | Network Calls | **0** |
 
