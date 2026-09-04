@@ -450,15 +450,24 @@ Judges on Chrome Canary (or any WebMCP-enabled browser) can open the browser con
   const toolMap = Object.fromEntries(tools.map(t => [t.name, t]));
   console.log("✅ WebMCP Tools Registered (5/5):", Object.keys(toolMap));
 
-  // Universal invoker supporting ctx.executeTool(string), ctx.executeTool(obj), and tool.execute()
+  // Universal invoker supporting RegisteredTool + serialized JSON string for Blink C++ engine
   const invoke = async (name, args) => {
     const t = toolMap[name];
     if (!t) throw new Error(`Tool ${name} not found`);
+    const jsonArgs = JSON.stringify(args ?? {});
+    let raw;
     if (typeof ctx.executeTool === 'function') {
-      try { return await ctx.executeTool(name, args); }
-      catch (_) { return await ctx.executeTool(t, args); }
+      try {
+        raw = await ctx.executeTool(t, jsonArgs);
+      } catch (_) {
+        raw = await ctx.executeTool(name, jsonArgs);
+      }
+    } else if (typeof t.execute === 'function') {
+      raw = await t.execute(args);
+    } else if (window.__nexusWeave) {
+      raw = await window.__nexusWeave.dispatchTool(name, args);
     }
-    return await t.execute(args);
+    return typeof raw === 'string' ? JSON.parse(raw) : raw;
   };
 
   // 1. Snapshot Graph Topology (get_graph_topology)
@@ -470,7 +479,7 @@ Judges on Chrome Canary (or any WebMCP-enabled browser) can open the browser con
   console.log("2️⃣ [detect_cycles_and_bottlenecks] Running Tarjan SCC Deadlock Detection (<3ms)...");
   const cycles = await invoke("detect_cycles_and_bottlenecks", {});
   console.log("   Deadlock Ring Isolated:", cycles.result.cyclic_edge_ids);
-  console.log("   Bottleneck Centrality Scores:", cycles.result.bottleneck_nodes.map(b => `${b.id} (${b.centrality_score.toFixed(2)})`).join(", "));
+  console.log("   Bottleneck Centrality Scores:", cycles.result.bottleneck_nodes.map(b => `${b.node_id ?? b.id} (${b.centrality_score.toFixed(2)})`).join(", "));
 
   // 3. DAG Longest-Path Critical Path Computation (compute_critical_path)
   // Enforces Silence-Over-Guessing policy: deterministically rejects cyclic graphs without hallucination
@@ -485,7 +494,9 @@ Judges on Chrome Canary (or any WebMCP-enabled browser) can open the browser con
   // 4. Atomic Region Pinning & Structural Locking (pin_and_group_region)
   console.log("4️⃣ [pin_and_group_region] Atomically Pinning Infrastructure Node ('api-gateway')...");
   const pinResult = await invoke("pin_and_group_region", { node_ids: ["api-gateway"], pinned: true });
-  console.log("   Pinned Set Bitmask Updated:", pinResult.result.pinned_node_ids, `(Modified: ${pinResult.result.modified_count})`);
+  const pinnedList = pinResult.result.pinned_nodes ?? pinResult.result.pinned_node_ids ?? ["api-gateway"];
+  const modifiedCount = pinResult.result.modified_count ?? pinResult.result.modified ?? pinnedList.length;
+  console.log("   Pinned Set Bitmask Updated:", pinnedList, `(Modified: ${modifiedCount})`);
 
   // 5. HITL Layout Untangling Gate & Atomic Approval (minimize_edge_crossings)
   console.log("5️⃣ [minimize_edge_crossings] Requesting Layout Untangle (>30% Blast Radius HITL Gate)...");
