@@ -506,12 +506,16 @@ Judges on Chrome Canary (or any WebMCP-enabled browser) can open the browser con
 ```
 nexus-weave/
 │
-├── assets/                                  # Visual assets
+├── assets/                                  # Visual assets & documentation media
 │   ├── banner.png                           # Hero banner
-│   ├── dashboard_deadlock_detection.png     # Feature screenshot #1
-│   ├── hitl_approval_ghost_nodes.png        # Feature screenshot #2
-│   ├── chaos_engineering_outage.png         # Feature screenshot #3
+│   ├── dashboard_deadlock_detection.png     # Feature screenshot #1 (Tarjan SCC deadlock)
+│   ├── hitl_approval_ghost_nodes.png        # Feature screenshot #2 (HITL ghost preview)
+│   ├── chaos_engineering_outage.png         # Feature screenshot #3 (Chaos cascade)
 │   └── demo_thumbnail.png                   # YouTube video thumbnail
+│
+├── public/
+│   └── assets/
+│       └── logo.png                         # High-res SVG/PNG brand icon asset
 │
 ├── src/
 │   ├── main.ts                              # App entry — mounting harness, chaos mode, auto-centering
@@ -563,11 +567,7 @@ nexus-weave/
 ├── package.json                             # "license": "MIT", pnpm workspace
 ├── pnpm-lock.yaml                           # Deterministic dependency lockfile
 ├── AGENTS.md                                # Coding assistant context & strict architectural rules
-├── LICENSE                                  # MIT License
-├── progress_log.md                          # Step-by-step implementation audit trail (Steps 1–27)
-├── TECHNICAL_NOTES.md                       # Architectural decision records (ADRs) per step
-├── project_state.md                         # Current implementation state & feature registry
-└── do_after_completion.md                   # Step completion verification checklist
+└── LICENSE                                  # MIT License
 ```
 
 ---
