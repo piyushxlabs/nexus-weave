@@ -195,6 +195,9 @@ export function renderUnsupportedBanner(
 /**
  * Opens a non-blocking interactive demonstration modal showcasing autonomous untangling.
  */
+/**
+ * Opens a non-blocking interactive demonstration modal showcasing autonomous untangling.
+ */
 export function openDemoModal(): HTMLElement {
   const existing = document.getElementById('nexus-demo-modal');
   if (existing) existing.remove();
@@ -213,15 +216,15 @@ export function openDemoModal(): HTMLElement {
       border: 1px solid rgba(99,102,241,0.25);
       border-radius: 14px;
       width: 90%;
-      max-width: 600px;
-      padding: 28px;
+      max-width: 680px;
+      padding: 24px;
       box-shadow:
         0 40px 80px -12px rgba(0,0,0,0.7),
         0 0 0 0.5px rgba(255,255,255,0.04) inset;
       color: #F3F4F6;
     ">
       <!-- Modal header -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
         <div>
           <h2 style="
             font-size: 16px;
@@ -229,9 +232,9 @@ export function openDemoModal(): HTMLElement {
             color: #F3F4F6;
             letter-spacing: -0.01em;
             margin-bottom: 4px;
-          ">Nexus Weave — 2-Minute WebMCP Walkthrough</h2>
+          ">Nexus Weave — 2-Minute Architecture Walkthrough</h2>
           <p style="font-size: 11.5px; color: #6B7280;">
-            Browser-native dependency graph untangler · Zero-egress · Semi-autonomous
+            Browser-native dependency graph untangler · Zero-egress · Semi-autonomous WebMCP
           </p>
         </div>
         <button id="close-modal-btn" style="
@@ -251,62 +254,57 @@ export function openDemoModal(): HTMLElement {
         "
         onmouseover="this.style.background='rgba(255,255,255,0.1)'"
         onmouseout="this.style.background='rgba(255,255,255,0.05)'"
+        aria-label="Close demo modal"
         >&times;</button>
       </div>
 
-      <!-- Demo content -->
-      <div style="
-        background: rgba(9,13,22,0.7);
-        border: 1px solid rgba(255,255,255,0.07);
-        border-radius: 10px;
-        padding: 24px;
-        text-align: center;
-        margin-bottom: 24px;
-      ">
-        <div style="font-size: 32px; margin-bottom: 12px; letter-spacing: 0.1em;">🕸️ ➔ ⚡ ➔ ✨</div>
-        <p style="font-size: 13px; color: #6B7280; line-height: 1.7; max-width: 440px; margin: 0 auto;">
-          Nexus Weave turns the active browser tab into a high-performance WebMCP graph server.
-          External AI agents query topology, identify cyclic deadlocks, compute critical paths,
-          and untangle tangled layout regions in real time —
-          <strong style="color: #9CA3AF;">without sending data outside this tab.</strong>
-        </p>
-      </div>
+      <!-- Video Embed -->
+      <iframe
+        src="https://www.youtube.com/embed/SqhjPxpT9OE?autoplay=1&rel=0"
+        title="Nexus Weave Video Walkthrough"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+        style="
+          width: 100%;
+          aspect-ratio: 16 / 9;
+          border-radius: 8px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          margin: 12px 0;
+          display: block;
+          background: #000;
+        "
+      ></iframe>
 
-      <!-- Capability grid -->
-      <div style="
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-        margin-bottom: 24px;
-      ">
-        ${[
-          { icon: '⬡', title: 'get_graph_topology', desc: 'Read all nodes, edges & positions' },
-          { icon: '⟳', title: 'detect_cycles', desc: 'DFS cycle detection + bottlenecks' },
-          { icon: '→', title: 'compute_critical_path', desc: 'Longest-path over DAG' },
-          { icon: '⊹', title: 'minimize_crossings', desc: 'Barycenter layout with approval gate' },
-        ].map(({ icon, title, desc }) => `
-          <div style="
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 8px;
-            padding: 12px;
-          ">
-            <div style="font-size: 18px; margin-bottom: 6px;">${icon}</div>
-            <div style="font-size: 10.5px; font-weight: 600; color: #A5B4FC; margin-bottom: 3px; font-family: 'SF Mono', monospace;">${title}</div>
-            <div style="font-size: 10.5px; color: #4B5563;">${desc}</div>
-          </div>
-        `).join('')}
-      </div>
+      <!-- Fallback external link & Action button -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; flex-wrap: wrap; gap: 10px;">
+        <a
+          href="https://youtu.be/SqhjPxpT9OE"
+          target="_blank"
+          rel="noopener noreferrer"
+          style="
+            color: #818CF8;
+            font-size: 12px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.15s;
+          "
+          onmouseover="this.style.color='#A5B4FC'"
+          onmouseout="this.style.color='#818CF8'"
+        >
+          ▶ Watch in 1080p60 on YouTube
+        </a>
 
-      <!-- Actions -->
-      <div style="display: flex; justify-content: flex-end; gap: 10px;">
         <button id="modal-ok-btn" style="
-          padding: 9px 20px;
+          padding: 8px 18px;
           background: #4F46E5;
           color: #FFFFFF;
           border: none;
           border-radius: 7px;
-          font-size: 12.5px;
+          font-size: 12px;
           font-weight: 600;
           font-family: inherit;
           cursor: pointer;
@@ -315,7 +313,7 @@ export function openDemoModal(): HTMLElement {
         "
         onmouseover="this.style.background='#4338CA'"
         onmouseout="this.style.background='#4F46E5'"
-        >Got It — Let's Untangle</button>
+        >Close</button>
       </div>
     </div>
   `;

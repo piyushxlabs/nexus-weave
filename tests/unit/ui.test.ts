@@ -276,11 +276,13 @@ describe('Step 16: UI Components & Affordances', () => {
       }
     });
 
-    it('opens interactive walkthrough demo modal', () => {
+    it('opens interactive walkthrough demo modal with embedded YouTube player', () => {
       const modal = openDemoModal() as unknown as MockElement;
       expect(modal.id).toBe('nexus-demo-modal');
       expect(modal.getAttribute('role')).toBe('dialog');
-      expect(modal.innerHTML).toContain('2-Minute WebMCP Walkthrough');
+      expect(modal.innerHTML).toContain('2-Minute Architecture Walkthrough');
+      expect(modal.innerHTML).toContain('https://www.youtube.com/embed/SqhjPxpT9OE');
+      expect(modal.innerHTML).toContain('https://youtu.be/SqhjPxpT9OE');
     });
   });
 
